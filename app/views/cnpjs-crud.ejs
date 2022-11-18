@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabela CNPJ</title>
+    <link type="text/css" rel="stylesheet" href="/css/cnpjs-crud.css"/>
+    <link rel="icon" type="image/x-icon" href="/images/controller.ico">
+    <script src="/js/cnpj-crud-js.js" defer></script>
+</head>
+<body>
+    <div class="conteiner">
+        <div class="home-icon">
+            <a href="/logout">
+                <img  src="./images/logout.png">
+            </a>
+            LOGOUT
+        </div>
+        <div class="headers-conteiner">
+            <ul class="headers">
+                <li class="li-left">ID</li>
+                <li class="li-center">CNPJ</li>
+                <li class="li-ccp">CCP</li>
+                <li class="li-mun ">MUNICÍPIO</li>
+                <li class="li-right">RAZÃO SOCIAL</li>
+            </ul>
+        </div>
+        <div class="menu">
+            <ul>
+                <li>
+                    <button id="button-new">INSERIR NOVO</button>
+                </li>
+                <li>
+                    <button id="button-update">ALTERAR</button>
+                </li>
+                <li>
+                    <button id="button-delete">DELETAR</button>
+                </li>
+            </ul>
+        </div>
+        <table>
+            <tbody>
+                <% if(results.length > 0) { %>
+                    <% for (let i = 0; i <= results.length - 1; i++) { %>
+                        <% let item = results[i] %>
+                        <% let cnpjFormatted = `${item.cnpj.substring(0,2)}.${item.cnpj.substring(2,5)}.${item.cnpj.substring(5,8)}/${item.cnpj.substring(8,12)}-${item.cnpj.substring(12,14)}` %>
+                        <tr data-id=<%= item.id %> style=<%= i % 2 === 0 ? "background-color:rgb(204,209,209);" : "" %>>
+                            <td class="td-left"><%= item.id %></td>
+                            <td class="td-center"><%= cnpjFormatted %></td>
+                            <td class="td-ccp"><%= item.CCP_NUMBER && item.CCP_NUMBER !== "NULL"? item.CCP_NUMBER : "----------" %></td>
+                            <td class="td-mun"><%= item.municipio %></td>
+                            <td class="td-right"><%= item.nome_empresa %></td>
+                        </tr>
+                    <% } %>
+                <% } else { %>
+                    <tr>
+                        <td class="no-items" colspan="3">Sem itens para listar.</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+        <div class="overlay" style="display:none">
+            <form id="form">
+                <button class="close-form" type="button">X</button>
+                <label>CNPJ</label><input type="text" maxlength="14" pattern="[0-9]{14}" id="cnpj" data-id="" required/>
+                <label>RAZÃO SOCIAL</label><input type="text" maxlength="50" id="name" required/>
+                <label>MUNICÍPIO</label><input type="text" maxlength="15" id="municipio" required/>
+                <label>CCP</label><input type="text" maxlength="10" id="ccp-number" pattern="[0-9]*"/>
+                <button type="submit">GRAVAR</button>
+            </form>
+        </div>
+        <div id="success" class="hide">
+            <p>Operação concluída com sucesso!</p>
+        </div>
+        <div id="error" class="hide">
+            <p></p>
+        </div>
+    </div>
+</body>
+</html>

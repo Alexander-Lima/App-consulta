@@ -1,0 +1,248 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    list-style: none;
+    font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+body {
+    margin-bottom: 5em;
+}
+
+ul {
+    display: flex;
+    flex-direction: row;
+    gap: 1em;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 0.5em 0;
+}
+
+li {
+    font-weight: bolder;
+    border: 2px transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    width: fit-content;
+    color: white;
+    padding: 0.25em 0.25em;
+}
+
+.pending {
+    background-color: red;
+}
+
+.no-pendencies {
+    background-color: green;
+    cursor: auto;
+}
+
+.no-ccp {
+    background-color: gray
+}
+
+.failure {
+    background-color: orange;
+}
+
+table {
+    border-spacing: 0em 0.5em;
+}
+
+thead {
+    position: fixed;
+    padding-top: 1.5em;
+    z-index: 1001;
+    background-color: white;
+    top: -0.1em;
+    margin-left: 8vw;
+}
+
+tbody {
+    position: relative;
+    top: 4em;
+    left: 8vw;
+}
+
+tr {
+    height: 2.5em;
+    background-color: rgb(218, 214, 214);
+}
+
+.home-icon {
+    display: flex;
+    align-items: center;
+    top: 1em;
+    left: 1%;
+    gap: 3px;
+    z-index: 1002;
+    width: 1em;
+    font-weight: bolder;
+    position: fixed;
+    top: 2em;
+}
+
+.home-icon img{
+    height: 30px;
+    width: 30px;
+}
+
+a {
+    text-decoration: none; 
+}
+
+.th-left, .th-center, .th-right, .td-left, .td-center, .td-right, .td-mun {
+    text-align: center;
+    font-weight: bolder;
+}
+
+.th-left, .td-left {
+    width: 18vw;
+}
+
+.th-center, .td-center {
+    width: 30vw;
+}
+
+.th-right, .td-right {
+    width: 22vw;
+}
+
+.th-mun, .td-mun {
+    width: 8vw;
+}
+
+.th-left, .th-center, .th-right, .th-mun {
+    background: green;
+    color: white;
+    padding: 0.3em 0;
+}
+
+[data-content] {
+    position: relative;
+}
+
+[data-content]:hover::after {
+    content: attr(data-content);
+    position: absolute;
+    font-size: 1em;
+    border-radius: 3px;
+    background-color: rgb(251, 251, 214);
+    color: black;
+    top: 2em;
+    left: -1.6em;
+    padding: 3px;
+    z-index: 10001;
+    border: 2px solid black;
+}
+
+.arrow {
+    position: fixed;
+    font-size: 50px;
+    top: 0.5em;
+    color: white;
+    transform: rotate(271deg);
+}
+
+.arrow:hover {
+    cursor: pointer;
+}
+
+#status-filter, #municipio-filter {
+    flex-direction: column;
+    position: fixed;
+    background-color: RGB(244,246,247);
+    top: 4em;
+    z-index: 1005;
+    margin: 0px 10px;
+    left: 68vw;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    border: 2px black solid;
+    font-weight: bolder;
+    color: black;
+    border-radius: 10px;
+    padding: 5px 0px;
+    width: 12em;
+    display: flex;
+    gap: 0.4em;
+}
+
+#municipio-filter {
+    left: 53vw;
+}
+
+#status-filter div, #municipio-filter div {
+    padding: 0px 5px;
+}
+
+#status-filter div div, #municipio-filter div div {
+    padding: 5px 5px;
+    display: flex;
+    gap: 5px;
+}
+
+#status-filter div  button, #municipio-filter div button {
+    padding: 5px 10px;
+    background: rgb(41,76,177);
+    color: white;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-weight: bolder;
+    border-radius: 16px;
+    margin: 0 auto;
+    align-self: center
+}
+
+#status-filter div button:hover, #municipio-filter div button:hover {
+    cursor: pointer;
+    background: rgba(41,76,177, 0.5);
+}
+
+#no-items td {
+    width: 78vw;
+    text-align: center;
+    font-size: 1.2em;
+    font-weight: bolder;
+}
+
+.div-options {
+    max-height: 10em;
+    overflow-y: scroll;
+}
+.mark-unmark-div {
+    margin: 0px 5px;
+}
+
+#municipio-button, #status-button {
+    display: flex;
+}
+
+[data-totalcnpj]::after {
+    content: attr(data-totalcnpj);
+    position: relative;
+    font-size: 0.9em;
+    background: red;
+    padding: 0.2em 0.2em;
+    text-align: center;
+    border: 2px transparent;
+    border-radius: 40%;
+    top: -0.5em;
+    left: 0.5em;
+    display: inline-block;
+    min-width: 2em;
+}
+
+[data-totalstatus]::after {
+    content: attr(data-totalstatus);
+    position: relative;
+    font-size: 0.9em;
+    background: red;
+    padding: 0.2em 0.2em;
+    text-align: center;
+    border: 2px transparent;
+    border-radius: 40%;
+    top: -0.5em;
+    left: 1.8em;
+    display: inline-block;
+    min-width: 2em;
+}

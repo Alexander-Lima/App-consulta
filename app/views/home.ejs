@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="/css/home.css"/>
+    <link rel="icon" type="image/x-icon" href="/images/controller.ico">
+    <script src="/js/home-js.js" defer></script>
+    <title>HOME</title>
+</head>
+<body>
+    <div class="conteiner">
+        <div data-title="CONSULTAR STATUS DAS TPI's NO SICABOM" data-href="/consulta-tpi" class="card">
+            <img src="images/fenix.png"/>
+        </div>
+        <div data-title="CONSULTAR PENDÊNCIAS NA PREFEITURA" data-href="/consulta-ccp" class="card">
+            <img src="images/prefeitura-logo.png"/>
+        </div>
+        <div data-title="CNPJ's CADASTRADOS" data-href="/login" class="card">
+            <img src="images/business.png"/>
+        </div>
+        <div id="overlay" style="display: none;">
+            <div id="progress-bar" style="display: none;">
+                <p>
+                    AGUARDE...<br>
+                    ISTO PODERÁ LEVAR ALGUNS MINUTOS.
+                </p>
+                <div id="border">
+                    <div id="bar" style="width: 0%"></div>
+                </div>
+                <p id="completion">0%</p>
+            </div>
+            <div id="spinner" style="display: none;">
+                <p>AGUARDE...</p>
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

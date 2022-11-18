@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta CNPJ</title>
+    <link type="text/css" rel="stylesheet" href="/css/consulta-tpi.css"/>
+    <link rel="icon" type="image/x-icon" href="/images/controller.ico">
+    <script src="/js/consulta-tpi-js.js" defer></script>
+</head>
+<body>
+    <div class="bg-white">
+        <ul class="legenda">
+            <li>
+                <div class="home-icon">
+                    <a href="/">
+                        <img  src="./images/home.png">
+                    </a>
+                    HOME
+                </div>
+            </li>
+            <li>LEGENDA:</li>
+            <li><div class="legenda-green"></div>PAGOS</li>
+            <li><div class="legenda-red"></div>VENCIDOS</li>
+            <li><div class="legenda-yellow"></div>VENCENDO NESTE MÊS</li>
+            <li><div class="legenda-blue"></div>VENCIMENTO FUTURO</li>
+            <li><div class="legenda-gray"></div>ISENTOS</li>
+            <li><div class="legenda-black"></div>SEM REGISTROS</li>
+            <li><div class="legenda-orange"></div>FALHAS</li>
+        </ul>
+        <ul class="fixed-headers">
+            <li class="col1" data-totalcnpj="">CNPJ</li>
+            <li class="col2">RAZÃO SOCIAL</li>
+            <li class="col3">MUNICÍPIO <span class="arrow" id="municipio-arrow">&#8249</span></li>
+            <li class="col4" data-totalstatus="">STATUS TPI <span class="arrow" id="status-arrow">&#8249</span></li>
+        </ul>
+    </div>
+    <div class="conteiner">
+        <% let statusOptions = [] %>
+        <% let municipioOptions = [] %>
+        <% for (cnpj of cnpjs) { %>
+            <% let cnpjNumber = cnpj[0].CPF_CNPJ %>
+            <% let nomeEmpresa = cnpj.filter(item => item.NOME_EMPRESA)[0].NOME_EMPRESA %>
+            <% let municipio = cnpj.filter(item => item.MUNICIPIO)[0].MUNICIPIO %>
+            <% let idEmpresa = cnpj.filter(item => item.ID)[0].ID %>
+            <% let yearsObj = cnpj.filter(item => item.SENT)[0] %>
+            <% let yearsSent = yearsObj ? yearsObj.SENT : false  %>
+            <% if(!municipioOptions.includes(municipio)) {municipioOptions.push(municipio)} %>      
+
+            <ul class="cnpj" style="display: flex;" id=<%= cnpjNumber %> data-id=<%= idEmpresa %>>
+                <% let cnpjFormatted = `${cnpjNumber.substring(0,2)}.${cnpjNumber.substring(2,5)}.${cnpjNumber.substring(5,8)}/${cnpjNumber.substring(8,12)}-${cnpjNumber.substring(12,14)}` %>
+                <li class="cnpj-left">
+                    <ul>
+                        <li>
+                            <button type="button" class="update">
+                                <img src="/images/update.png"/>
+                            </button>
+                            <%= cnpjFormatted %>
+                        </li>
+                    </ul>
+                </li>
+                <li class="cnpj-center"><%= nomeEmpresa %></li>
+                <li class="cnpj-mun"><%= municipio %></li>
+                <li>
+                    <ul class="status" id=<%= idEmpresa %>>
+                        <% if (cnpj[0].SEM_REGISTRO) { %>
+                            <li class="no-register" style="display: inline-flex;"><span>SEM REGISTRO</span></li>
+                            <% if(!statusOptions.includes("SEM REGISTROS")) {statusOptions.push("SEM REGISTROS")} %>   
+                        <% } else if (cnpj[0].FALHOU) { %>
+                            <li class="failure" style="display: inline-flex;"><span>FALHA AO BUSCAR DADOS</span></li>
+                            <% if(!statusOptions.includes("FALHAS")) {statusOptions.push("FALHAS")} %> 
+                        <% } else { %>
+                            <% for (item of cnpj) { %>
+                                <% if (item.SITUACAO === "PAGO") { %>
+                                    <li style="display: inline-flex;" class="pago">
+                                        <span data-title=<%= item.DATA_VENCIMENTO %> 
+                                        data-barcode=<%= item.REGISTRO_CODIGO_BARRAS %>>
+                                            <%= item.ANO_PRESTACAO %> 
+                                        </span>
+                                    </li>
+                                    <% if(!statusOptions.includes("PAGOS")) {statusOptions.push("PAGOS")} %> 
+                                <% } else if (item.SITUACAO === "ISENTO") { %>
+                                    <li style="display: inline-flex;" class="isento">
+                                        <span data-title=<%= item.DATA_VENCIMENTO %>>
+                                            <%= item.ANO_PRESTACAO %>
+                                        </span>
+                                    </li>
+                                    <% if(!statusOptions.includes("ISENTOS")) {statusOptions.push("ISENTOS")}%> 
+                                <% } else if (item.SITUACAO) { %>
+                                    <% const itemDateArray = item.DATA_VENCIMENTO.split("/") %>
+                                    <% const itemDate = new Date(itemDateArray[2], itemDateArray[1] - 1, itemDateArray[0]) %>
+                                    <% const date = new Date() %>
+                                    <% const currentDay = date.getDate() %>
+                                    <% const currentMonth = date.getMonth() %>
+                                    <% const currentYear = date.getFullYear() %>
+                                    <% const today = new Date(currentYear, currentMonth, currentDay) %>
+                                    <% const lastDayMonth = new Date(currentYear, currentMonth + 1, 0) %>
+
+                                    <% if (itemDate - today < 0) { %>
+                                        <li 
+                                        style="display: inline-flex;"
+                                        class='<%=yearsSent && yearsSent.includes(item.ANO_PRESTACAO) ? "vencido sent" : "vencido" %>'>
+                                            <span 
+                                            data-title=<%= item.DATA_VENCIMENTO %>>
+                                                <%= item.ANO_PRESTACAO %>
+                                            </span>
+                                        </li>
+                                        <% if(!statusOptions.includes("VENCIDOS")) {statusOptions.push("VENCIDOS")} %> 
+                                    <% } else if (lastDayMonth - itemDate >= 0) { %>
+                                        <li 
+                                        style="display: inline-flex;"
+                                        class='<%=yearsSent && yearsSent.includes(item.ANO_PRESTACAO) ? "vencer-mes sent" : "vencer-mes" %>'>
+                                            <span 
+                                            data-title=<%= item.DATA_VENCIMENTO %>>
+                                                <%= item.ANO_PRESTACAO %>
+                                            </span>
+                                        </li>
+                                        <% if(!statusOptions.includes("VENCENDO NESTE MÊS")) {statusOptions.push("VENCENDO NESTE MÊS")} %> 
+                                    <% } else { %>
+                                        <li 
+                                        style="display: inline-flex;"
+                                        class='<%=yearsSent && yearsSent.includes(item.ANO_PRESTACAO) ? "vencer-futuro sent" : "vencer-futuro" %>'>
+                                            <span 
+                                            data-title=<%= item.DATA_VENCIMENTO %>>
+                                                <%= item.ANO_PRESTACAO %> 
+                                            </span>
+                                        </li>
+                                        <% if(!statusOptions.includes("VENCIMENTO FUTURO")) {statusOptions.push("VENCIMENTO FUTURO")} %> 
+                                    <% } %>
+                                <% } %>
+                            <% } %>
+                        <% } %>
+                    </ul>
+                </li>
+            </ul>
+        <% } %>
+        <ul id="no-items" style=<%= cnpjs.length === 0 ? "display:flex;" : "display:none;" %>>
+            <li>Não há itens para exibir.</li>
+        </ul> 
+    </div>
+    <div id="status-filter" style="display: none;">
+        <div class="options-list">
+            <% for(item of statusOptions) { %>
+                <% if(item === "PAGOS") { %>
+                    <div>
+                        <input type="checkbox" value="pago" class="status-option" checked="checked"/>
+                        <label>PAGOS</label>
+                    </div>
+                <% } else if(item === "VENCIDOS") { %>
+                    <div>
+                        <input type="checkbox" value="vencido" class="status-option" checked="checked"/>
+                        <label>VENCIDOS</label>
+                    </div> 
+                <% } else if(item === "VENCENDO NESTE MÊS") { %>
+                    <div>
+                        <input type="checkbox" value="vencer-mes" class="status-option" checked="checked"/>
+                        <label>VENCENDO NESTE MÊS</label>
+                    </div> 
+                <% } else if(item === "VENCIMENTO FUTURO") { %>
+                    <div>
+                        <input type="checkbox" value="vencer-futuro" class="status-option" checked="checked"/>
+                        <label>VENCIMENTO FUTURO</label>
+                    </div>
+                <% } else if(item === "SEM REGISTROS") { %>
+                    <div>
+                        <input type="checkbox" value="no-register" class="status-option" checked="checked"/>
+                        <label>SEM REGISTROS</label>
+                    </div>
+                <% } else if(item === "FALHAS") { %>
+                    <div>
+                        <input type="checkbox" value="failure" class="status-option" checked="checked"/>
+                        <label>FALHAS</label>
+                    </div>
+                <% } else if(item === "ISENTOS") { %>
+                    <div>
+                        <input type="checkbox" value="isento" class="status-option" checked="checked"/>
+                        <label>ISENTOS</label>
+                    </div>
+                <% } %>
+            <% } %>
+        </div>
+        <div class="mark-unmark-div">
+            <input type="checkbox" class="mark-unmark" checked="checked"/>
+            <label id="status-mark-unmark-label">DESMARCAR TODOS</label>
+        </div>
+        <div id="div-button">
+            <button type="button" id="status-filter-button">FILTRAR</button>
+        </div>
+    </div>
+    <div id="municipio-filter" style="display: none;">
+        <div class="options-list">
+            <% for(item of municipioOptions) { %>
+                <div>
+                    <input type="checkbox" value="<%= item %>" class="municipio-option" checked="checked"/>
+                    <label><%= item %></label>
+                </div>
+            <% } %>
+        </div>
+        <div class="mark-unmark-div">
+            <input type="checkbox" class="mark-unmark" checked="checked"/>
+            <label id="municipio-mark-unmark-label">DESMARCAR TODOS</label>
+        </div>
+        <div id="div-button">
+            <button type="button" id="municipio-filter-button">FILTRAR</button>
+        </div>
+    </div>
+</body>
+</html>

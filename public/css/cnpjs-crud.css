@@ -1,0 +1,223 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-decoration: none;
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    font-weight: bolder;
+}
+
+.headers-conteiner {
+    width: 99vw;
+    height: 40px;
+    background-color: white;
+    display: flex;
+    position: fixed;
+    z-index: 1001;
+    padding-top: 25px;
+    margin-left: 10vw;
+}
+.headers {
+    display: flex;
+    width: 99vw;
+    list-style: none;
+    align-items: center;
+    gap: 0.12em;
+}
+
+table {
+    border-collapse: separate;
+    margin-left: 10vw;
+    position: relative;
+    top: 50px;
+    text-align: center;
+}
+
+.home-icon {
+    display: flex;
+    align-items: center;
+    position: fixed;
+    left: 1vw;
+    gap: 3px;
+    z-index: 1002;
+    background-color: white;
+    height: 40px;
+    padding-top: 25px;
+}
+
+.home-icon img{
+    height: 30px;
+    width: 30px;
+}
+
+.li-left, .li-right, .li-center, .li-ccp, .li-mun {
+    text-align: center;
+    background-color: rgb(3, 155, 229);
+    font-size: 20px;
+    color: white;
+    border: 2px solid black;
+}
+
+td {
+    padding: 5px 5px;
+}
+
+.li-left, .td-left, .li-ccp, .td-ccp {
+    width: 6vw;
+}
+
+.li-center, .td-center, .td-mun, .li-mun {
+    width: 15vw;
+}
+
+.li-right, .td-right {
+    width: 35vw;
+}
+
+tr:hover, .selected {
+    background-color: rgb(3, 155, 229, 0.3)!important;
+    cursor: pointer;
+}
+
+.menu {
+    position: fixed;
+    top: 45vh;
+    left: 88.5vw;
+}
+
+.menu ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+}
+
+.menu ul li button {
+    border: 2px solid transparent;
+    border-radius: 10px;
+    background-color: rgb(3, 155, 229);
+    padding: 0px 10px;
+    color: white;
+    border: 2px solid black;
+    width: 120px;
+    padding: 3px 0px;
+}
+
+form button[type='submit']:hover {
+    background-color: rgb(236, 240, 241);
+    cursor: pointer;
+    color: black;
+    transition: 0.5s ease;
+}
+
+.menu ul li button:hover {
+    cursor: pointer;
+    background-color: white;
+    color: rgb(3, 155, 229);
+}
+
+.overlay {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    background-color: rgba(128, 128, 128, 0.5);
+    z-index: 1002;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    display: flex;
+    top: 0;
+}
+
+form {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 0.5em;
+    background-color: white;
+    height: fit-content;
+    width: 35vw;
+    border: 2px solid black;
+    border-radius: 16px;
+    justify-content: center;
+    padding: 1em;
+}
+
+form input {
+    text-align: center;
+    font-size: 15px;
+    height: 2em;
+    width: 90%;
+}
+
+form button {
+    padding: 2px 5px;
+    background-color: rgb(3, 155, 229);
+    color: white;
+    border: 2px solid black;
+    border-radius: 10px;
+    font-size: 17px;
+}
+
+form label {
+    font-size: 1.2em;
+}
+
+.close-form {
+    background-color: red;
+    color: white;
+    border: 2px solid black;
+    width: min-content;
+    border-radius: 0;
+    align-self: flex-end;
+    margin: 0 15px;
+    font-size: 15px;
+}
+
+.close-form:hover {
+    cursor: pointer;
+}
+
+#success, #error {
+    width: 200px;
+    min-height: 80px;
+    text-align: center;
+    color: white;
+    padding: 5px 5px;
+    border: 2px solid black;
+    position: fixed;
+    top: 1.4vw;
+    left: 83vw;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+#success {
+    background-image: linear-gradient(180deg, green, rgb(46,204,113));
+}
+
+#error {
+    background-image: linear-gradient(180deg, red, rgb(231, 76, 60));
+}
+
+.no-items {
+    width: 56vw;
+}
+
+.show {
+    animation: inOut 3.5s normal;
+}
+
+.hide {
+    opacity: 0;
+}
+
+@keyframes inOut {
+    0% {opacity: 0;}
+    50% {opacity: 1;}
+    100% {opacity: 0;}
+}
