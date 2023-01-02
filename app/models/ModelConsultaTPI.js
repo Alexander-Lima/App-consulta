@@ -42,6 +42,7 @@ module.exports = function () {
                 resp_row.data[0].NOME_EMPRESA = row.nome_empresa
                 resp_row.data[0].ID = row.id
                 resp_row.data[0].MUNICIPIO = row.municipio
+                resp_row.data[0].SP_ID = row.sp_id
                 
                 results.push(resp_row.data[0])
             }
@@ -75,6 +76,7 @@ module.exports = function () {
                 form_data.append("data[C_ID]", `${item.C_ID}`)
                 form_data.append("data[ANO_ATUAL]", `${item.ANO_ATUAL}`)
                 form_data.append("data[ANO_INICIO_TPI]", `${item.ANO_INICIO_TPI}`)
+                form_data.append("data[SP_ID]", `${item.SP_ID}`)
                 
                 let resp_item = false
 
