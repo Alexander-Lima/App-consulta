@@ -49,14 +49,18 @@
             <% if(!municipioOptions.includes(municipio)) {municipioOptions.push(municipio)} %>      
 
             <ul class="cnpj" style="display: flex;" id=<%= cnpjNumber %> data-id=<%= idEmpresa %>>
-                <% let cnpjFormatted = `${cnpjNumber.substring(0,2)}.${cnpjNumber.substring(2,5)}.${cnpjNumber.substring(5,8)}/${cnpjNumber.substring(8,12)}-${cnpjNumber.substring(12,14)}` %>
+                 <% if (cnpjNumber.length === 14) { %>
+                            <% cnpjCpfFormatted = `${cnpjNumber.substring(0,2)}.${cnpjNumber.substring(2,5)}.${cnpjNumber.substring(5,8)}/${cnpjNumber.substring(8,12)}-${cnpjNumber.substring(12,14)}` %>
+                        <% } else { %>
+                            <% cnpjCpfFormatted = `${cnpjNumber.substring(0,3)}.${cnpjNumber.substring(3,6)}.${cnpjNumber.substring(6,9)}-${cnpjNumber.substring(9,11)}` %>
+                        <% } %>
                 <li class="cnpj-left">
                     <ul>
                         <li>
                             <button type="button" class="update">
                                 <img src="/images/update.png"/>
                             </button>
-                            <%= cnpjFormatted %>
+                            <%= cnpjCpfFormatted %>
                         </li>
                     </ul>
                 </li>

@@ -34,8 +34,12 @@
                     <% municipioList.push(results[i].municipio) %>
                 <% } %>
                 <tr class="row" style="display: table-row;">
-                    <% let cnpjFormatted = `${results[i].cnpj.substring(0,2)}.${results[i].cnpj.substring(2,5)}.${results[i].cnpj.substring(5,8)}/${results[i].cnpj.substring(8,12)}-${results[i].cnpj.substring(12,14)}` %>
-                    <td class="td-left"><%= cnpjFormatted %></td>
+                     <% if (results[i].cnpj.length === 14) { %>
+                            <% cnpjCpfFormatted = `${results[i].cnpj.substring(0,2)}.${results[i].cnpj.substring(2,5)}.${results[i].cnpj.substring(5,8)}/${results[i].cnpj.substring(8,12)}-${results[i].cnpj.substring(12,14)}` %>
+                        <% } else { %>
+                            <% cnpjCpfFormatted = `${results[i].cnpj.substring(0,3)}.${results[i].cnpj.substring(3,6)}.${results[i].cnpj.substring(6,9)}-${results[i].cnpj.substring(9,11)}` %>
+                        <% } %>
+                    <td class="td-left"><%= cnpjCpfFormatted %></td>
                     <td class="td-center"><%= results[i].nome_empresa %></td>
                     <td class="td-mun"><%= results[i].municipio %></td>
                     <td class="td-right">

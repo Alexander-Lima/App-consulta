@@ -44,10 +44,15 @@
                 <% if(results.length > 0) { %>
                     <% for (let i = 0; i <= results.length - 1; i++) { %>
                         <% let item = results[i] %>
-                        <% let cnpjFormatted = `${item.cnpj.substring(0,2)}.${item.cnpj.substring(2,5)}.${item.cnpj.substring(5,8)}/${item.cnpj.substring(8,12)}-${item.cnpj.substring(12,14)}` %>
+                        <% let cnpjCpfFormatted = "" %>
+                        <% if (item.cnpj.length === 14) { %>
+                            <% cnpjCpfFormatted = `${item.cnpj.substring(0,2)}.${item.cnpj.substring(2,5)}.${item.cnpj.substring(5,8)}/${item.cnpj.substring(8,12)}-${item.cnpj.substring(12,14)}` %>
+                        <% } else { %>
+                            <% cnpjCpfFormatted = `${item.cnpj.substring(0,3)}.${item.cnpj.substring(3,6)}.${item.cnpj.substring(6,9)}-${item.cnpj.substring(9,11)}` %>
+                        <% } %>
                         <tr data-id=<%= item.id %> style=<%= i % 2 === 0 ? "background-color:rgb(204,209,209);" : "" %>>
                             <td class="td-left"><%= item.id %></td>
-                            <td class="td-center"><%= cnpjFormatted %></td>
+                            <td class="td-center"><%= cnpjCpfFormatted %></td>
                             <td class="td-ccp"><%= item.CCP_NUMBER && item.CCP_NUMBER !== "NULL"? item.CCP_NUMBER : "----------" %></td>
                             <td class="td-mun"><%= item.municipio %></td>
                             <td class="td-right"><%= item.nome_empresa %></td>
@@ -63,10 +68,10 @@
         <div class="overlay" style="display:none">
             <form id="form">
                 <button class="close-form" type="button">X</button>
-                <label>CNPJ</label><input type="text" maxlength="14" pattern="[0-9]{14}" id="cnpj" data-id="" required/>
+                <label>CNPJ/CPF</label><input type="text" maxlength="14" pattern="[0-9]{11,14}" id="cnpj" data-id="" required/>
                 <label>RAZÃO SOCIAL</label><input type="text" maxlength="50" id="name" required/>
                 <label>MUNICÍPIO</label><input type="text" maxlength="15" id="municipio" required/>
-                <label>CCP</label><input type="text" maxlength="10" id="ccp-number" pattern="[0-9]*"/>
+                <label>CCP</label><input type="text" maxlength="6" id="ccp-number" pattern="[0-9]{0,6}"/>
                 <button type="submit">GRAVAR</button>
             </form>
         </div>
