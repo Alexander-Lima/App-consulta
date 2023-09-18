@@ -22,16 +22,16 @@
             <tr>
                 <th class="th-left" data-totalcnpj="">CNPJ</th>
                 <th class="th-center">RAZÃO SOCIAL</th>
-                <th class="th-mun">MUNICÍPIO<span id="filter-municipio" class="arrow">&#8249</span></th>
+                <th class="th-mun">MUNICÍPIO<span id="filter-MUNICIPIO" class="arrow">&#8249</span></th>
                 <th class="th-right" data-totalstatus="">STATUS<span id="filter-status" class="arrow">&#8249</span></th>
             </tr>
         </thead>
         <tbody>
             <% let statusList = [] %>
-            <% let municipioList = [] %>
-            <% for (let i=0; i <= results.length-1; i++) { %>
-                <% if(!municipioList.includes(results[i].municipio)) { %>
-                    <% municipioList.push(results[i].municipio) %>
+            <% let MUNICIPIOList = [] %>
+            <% for (let i=0; i <= results.length - 1; i++) { %>
+                <% if(!MUNICIPIOList.includes(results[i].municipio)) { %>
+                    <% MUNICIPIOList.push(results[i].municipio) %>
                 <% } %>
                 <tr class="row" style="display: table-row;">
                      <% if (results[i].cnpj.length === 14) { %>
@@ -102,23 +102,23 @@
             <button type="button" id="status-filter-button">FILTRAR</button>
         </div>
     </div>
-    <div id="municipio-filter" style="display: none;">
+    <div id="MUNICIPIO-filter" style="display: none;">
         <div class="div-options">
-            <% for (let i = 0; i <= municipioList.length - 1; i++) { %>
+            <% for (let i = 0; i <= MUNICIPIOList.length - 1; i++) { %>
                 <div>
                     <input 
-                        type="checkbox" value="<%= municipioList[i] %>"
-                        class="municipio-option" checked="checked"/>
-                    <label><%= municipioList[i] %></label>
+                        type="checkbox" value="<%= MUNICIPIOList[i] %>"
+                        class="MUNICIPIO-option" checked="checked"/>
+                    <label><%= MUNICIPIOList[i] %></label>
                 </div>
             <% } %>
         </div>
         <div class="mark-unmark-div">
             <input type="checkbox" class="mark-unmark" checked="checked"/>
-            <label id="municipio-mark-unmark-label">DESMARCAR TODOS</label>
+            <label id="MUNICIPIO-mark-unmark-label">DESMARCAR TODOS</label>
         </div>
-        <div id="municipio-button">
-            <button type="button" id="municipio-filter-button">FILTRAR</button>
+        <div id="MUNICIPIO-button">
+            <button type="button" id="MUNICIPIO-filter-button">FILTRAR</button>
         </div>
     </div>
     <div>

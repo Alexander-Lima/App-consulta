@@ -7,12 +7,11 @@ class DAO {
 
 DAO.prototype.getAllJoinCCP = function () {
     return new Promise((res, rej) => {
-        let sql = "SELECT cnpj.id, cnpj.cnpj, cnpj.nome_empresa, ccp.ccp_number, cnpj.municipio"
-                + " FROM CNPJ LEFT OUTER JOIN CCP ON cnpj.id=ccp.trackcnpj ORDER BY cnpj.nome_empresa;"
+        let sql = "SELECT CNPJ.ID, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.STATUS, CCP.CCP_NUMBER, CNPJ.MUNICIPIO"
+                + " FROM CNPJ LEFT OUTER JOIN CCP ON CNPJ.ID=CCP.TRACKCNPJ ORDER BY CNPJ.NOME_EMPRESA;"
                 
         this.db.all(sql, (err, result) => {
-            if(err) console.log(err.message)
-            if(err) {rej(err.message); return}
+            if(err) { rej(err.message); return }
             res(result)
         })
     })
@@ -20,12 +19,12 @@ DAO.prototype.getAllJoinCCP = function () {
 
 DAO.prototype.getAllCNPJ = function () {
     return new Promise((res, rej) => {
-        let sql = "SELECT cnpj.id, cnpj.cnpj, cnpj.nome_empresa, cnpj.municipio, years.sent FROM cnpj LEFT OUTER JOIN " 
-                + "(SELECT trackcnpj, GROUP_CONCAT(year, ';') AS sent FROM years GROUP BY (trackcnpj)) AS years " 
-                + "ON cnpj.id = years.trackcnpj ORDER BY cnpj.nome_empresa;"
+        let sql = "SELECT CNPJ.ID, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.MUNICIPIO, YEARS.SENT FROM CNPJ LEFT OUTER JOIN " 
+                + "(SELECT TRACKCNPJ, GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS GROUP BY (TRACKCNPJ)) AS YEARS " 
+                + "ON CNPJ.ID = YEARS.TRACKCNPJ ORDER BY CNPJ.NOME_EMPRESA;"
 
         this.db.all(sql, (err, result) => {
-            if(err) {rej(err); return}
+            if(err) { rej(err); return }
             res(result)
         })
     })
@@ -33,13 +32,13 @@ DAO.prototype.getAllCNPJ = function () {
 
 DAO.prototype.getSentYears = function (id) {
     return new Promise((res, rej) => {
-        let sql = `SELECT GROUP_CONCAT(year, ';') AS sent FROM YEARS WHERE TRACKCNPJ=${id};`
+        let sql = `SELECT GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS WHERE TRACKCNPJ=${id};`
 
         this.db.all(sql, (err, result) => {
-            if(err) {rej(err); return}
-            [{sent}] = result
+            if(err) { rej(err); return }
+            [{ SENT }] = result
 
-            res(sent ? {SENT : sent.split(";")} : [])
+            res(SENT ? {SENT : SENT.split(";")} : [])
         })
     })
 }
@@ -92,11 +91,11 @@ DAO.prototype.insertItem = function (data) {
             const sanitizedCNPJ = util.sanitizeCNPJ(data.cnpj)
             const normalizedName = util.normalizeName(data.name)
             const normalizedMunicipio = util.normalizeName(data.municipio)
-            const {ccp} = data
+            const { ccp } = data
 
             this.db.exec("BEGIN TRANSACTION;")
             await insertTableCNPJ(this.db, sanitizedCNPJ, normalizedName, normalizedMunicipio)
-            await insertTableCCP(this.db, sanitizedCNPJ,ccp)
+            await insertTableCCP(this.db, sanitizedCNPJ, ccp)
             this.db.exec("END TRANSACTION;")
             res()
 
@@ -110,8 +109,8 @@ DAO.prototype.insertItem = function (data) {
             if(!sanitizedCNPJ) {rej("CNPJ inválido!"); return}
             
             let sqlInsertCNPJ = `INSERT INTO CNPJ VALUES (NULL, "${sanitizedCNPJ}",
-                                 "${normalizedName}", NULL, "${normalizedMunicipio}");`
-    
+                                 "${normalizedName}", NULL, "${normalizedMunicipio}", 1, NULL);`
+
             db.exec(sqlInsertCNPJ, (error) => {
                 if(error)  {rej("Falha ao inserir dados de CNPJ!"); return}
                 res()
@@ -126,11 +125,10 @@ DAO.prototype.insertItem = function (data) {
             db.all(sqlGetId, (error, results) => {
                 if(error) {db.exec("ROLLBACK;"); rej("ID da empresa não encontrado!"); return}
     
-                let id = results ? results[0]?.id : ""
+                let id = results ? results[0]?.ID : ""
                 let sqlInsertCCP = `INSERT INTO CCP VALUES (NULL, ${ccp ? ccp : "NULL"}, ${id});`
-        
                 db.exec(sqlInsertCCP, (error) => {
-                    if(error) {db.exec("ROLLBACK;"); rej("Falha ao inserir dados de CCP!"); return}
+                    if(error) { db.exec("ROLLBACK;"); rej("Falha ao inserir dados de CCP!"); return }
                     res()
                 }) 
             })
@@ -156,7 +154,7 @@ DAO.prototype.deleteItems = function (data) {
             let sqlDeleteFromCNPJ = `DELETE FROM CNPJ WHERE ID IN (${data.ids});`
         
             db.exec(sqlDeleteFromCNPJ, (error) => {
-                if(error) {rej("Falha ao deletar CNPJ!"); return}
+                if(error) { rej("Falha ao deletar CNPJ!"); return }
                 res()
             })
         })
@@ -167,7 +165,7 @@ DAO.prototype.deleteItems = function (data) {
             let sqlDeleteFromCCP = `DELETE FROM CCP WHERE TRACKCNPJ IN (${data.ids});`
     
             db.exec(sqlDeleteFromCCP, (error) => {
-                if(error) {db.exec("ROLLBACK;"); rej("Falha ao deletar CCP!"); return}
+                if(error) { db.exec("ROLLBACK;"); rej("Falha ao deletar CCP!"); return }
                 res()
             })
         })
@@ -181,19 +179,19 @@ DAO.prototype.getCountEmpresas = function (origin) {
             "SELECT COUNT(ID) FROM CCP WHERE CCP_NUMBER > 0"
         
         this.db.all(sql, (err, result) => {
-            if(err) {rej(err.message); return}
-            const [count] = result
-            res(count)
+            if(err) { rej(err.message); return }
+            const [COUNT] = result
+            res(COUNT)
         }) 
     })
 }
 
 DAO.prototype.insertSentYear = function (data) {
     return new Promise((res, rej) => {
-        let sql = `INSERT INTO years values(NULL, ${data.year}, ${data.id}); `
+        let sql = `INSERT INTO YEARS values(NULL, ${data.year}, ${data.id}); `
 
         this.db.exec(sql, (err) => {
-            if(err) {rej(err.message); return}
+            if(err) { rej(err.message); return }
             res()
         }) 
     })
@@ -201,10 +199,10 @@ DAO.prototype.insertSentYear = function (data) {
 
 DAO.prototype.deleteSentYear = function (data) {
     return new Promise((res, rej) => {
-        let sql = `DELETE FROM years WHERE YEAR=${data.year} AND TRACKCNPJ=${data.id};`
+        let sql = `DELETE FROM YEARS WHERE YEAR=${data.year} AND TRACKCNPJ=${data.id};`
 
         this.db.exec(sql, (err) => {
-            if(err) {rej(err.message); return}
+            if(err) { rej(err.message); return }
             res()
         }) 
     })
@@ -214,7 +212,18 @@ DAO.prototype.getUserID = function (user, pass) {
         let sql = `SELECT * FROM USERS WHERE NAME="${user}" AND PASS="${pass}";`
 
         this.db.all(sql, (err, result) => {
-            if(err) {rej(err.message); return}
+            if(err) { rej(err.message); return }
+            res(result)
+        })
+    })
+}
+
+DAO.prototype.toggleStatus = function (id, status) {
+    return new Promise((res, rej) => {
+        let sql = `UPDATE CNPJ SET STATUS=${status} WHERE ID=${id};`
+
+        this.db.all(sql, (err, result) => {
+            if(err) { rej(err.message); return }
             res(result)
         })
     })

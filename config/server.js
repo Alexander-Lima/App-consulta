@@ -12,7 +12,7 @@ app.use(express.static('public'));
 app.use(sessions({
     secret: "mysecretsession10293jjglotkl",
     saveUninitialized: true,
-    cookie: { maxAge: oneHour},
+    cookie: { maxAge: oneHour },
     resave: false
 }))
 app.use(bodyParser.urlencoded({extended: true}));

@@ -19,11 +19,12 @@
         </div>
         <div class="headers-conteiner">
             <ul class="headers">
-                <li class="li-left">ID</li>
-                <li class="li-center">CNPJ</li>
+                <li class="li-id">ID</li>
+                <li class="li-status">STATUS</li>
+                <li class="li-cnpj">CNPJ</li>
                 <li class="li-ccp">CCP</li>
                 <li class="li-mun ">MUNICÍPIO</li>
-                <li class="li-right">RAZÃO SOCIAL</li>
+                <li class="li-name">RAZÃO SOCIAL</li>
             </ul>
         </div>
         <div class="menu">
@@ -37,6 +38,9 @@
                 <li>
                     <button id="button-delete">DELETAR</button>
                 </li>
+                <li>
+                    <button id="button-toggle-status">ATIVAR/INATIVAR</button>
+                </li>
             </ul>
         </div>
         <table>
@@ -45,17 +49,18 @@
                     <% for (let i = 0; i <= results.length - 1; i++) { %>
                         <% let item = results[i] %>
                         <% let cnpjCpfFormatted = "" %>
-                        <% if (item.cnpj.length === 14) { %>
-                            <% cnpjCpfFormatted = `${item.cnpj.substring(0,2)}.${item.cnpj.substring(2,5)}.${item.cnpj.substring(5,8)}/${item.cnpj.substring(8,12)}-${item.cnpj.substring(12,14)}` %>
+                        <% if (item.CNPJ.length === 14) { %>
+                            <% cnpjCpfFormatted = `${item.CNPJ.substring(0,2)}.${item.CNPJ.substring(2,5)}.${item.CNPJ.substring(5,8)}/${item.CNPJ.substring(8,12)}-${item.CNPJ.substring(12,14)}` %>
                         <% } else { %>
-                            <% cnpjCpfFormatted = `${item.cnpj.substring(0,3)}.${item.cnpj.substring(3,6)}.${item.cnpj.substring(6,9)}-${item.cnpj.substring(9,11)}` %>
+                            <% cnpjCpfFormatted = `${item.CNPJ.substring(0,3)}.${item.CNPJ.substring(3,6)}.${item.CNPJ.substring(6,9)}-${item.CNPJ.substring(9,11)}` %>
                         <% } %>
-                        <tr data-id=<%= item.id %> style=<%= i % 2 === 0 ? "background-color:rgb(204,209,209);" : "" %>>
-                            <td class="td-left"><%= item.id %></td>
-                            <td class="td-center"><%= cnpjCpfFormatted %></td>
+                        <tr data-id=<%= item.ID %> class=<%= i % 2 === 0 ? "even" : "odd" %>>
+                            <td class="td-id"><%= item.ID %></td>
+                            <td class="td-status"><%= item.STATUS === 1 ? "ATIVO" : "INATIVO" %></td>
+                            <td class="td-cnpj"><%= cnpjCpfFormatted %></td>
                             <td class="td-ccp"><%= item.CCP_NUMBER && item.CCP_NUMBER !== "NULL"? item.CCP_NUMBER : "----------" %></td>
-                            <td class="td-mun"><%= item.municipio %></td>
-                            <td class="td-right"><%= item.nome_empresa %></td>
+                            <td class="td-mun"><%= item.MUNICIPIO %></td>
+                            <td class="td-name"><%= item.NOME_EMPRESA %></td>
                         </tr>
                     <% } %>
                 <% } else { %>
@@ -65,7 +70,7 @@
                 <% } %>
             </tbody>
         </table>
-        <div class="overlay" style="display:none">
+        <div class="overlay-form" style="display:none">
             <form id="form">
                 <button class="close-form" type="button">X</button>
                 <label>CNPJ/CPF</label><input type="text" maxlength="14" pattern="[0-9]{11,14}" id="cnpj" data-id="" required/>
@@ -75,11 +80,14 @@
                 <button type="submit">GRAVAR</button>
             </form>
         </div>
-        <div id="success" class="hide">
-            <p>Operação concluída com sucesso!</p>
-        </div>
-        <div id="error" class="hide">
-            <p></p>
+        <div class="overlay-message hide">
+            <button class="close-message" type="button">X</button>
+            <div>
+                <div id="success" class="hide">
+                    <p>Operação concluída com sucesso!</p>
+                </div>
+                <div id="error" class="hide"></div>
+            </div>
         </div>
     </div>
 </body>

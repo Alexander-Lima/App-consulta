@@ -5,6 +5,8 @@
 /deploy
 /config/database/Main.db
 /config/database/Min.db
+config/database/Sqlite3/Backup.db
 /config/database/Sqlite3/Main.db
 /daemon
 /copy-db.bat
+/db changes.txt

@@ -5,6 +5,8 @@ document.body.onload = function () {
     selectItems()
     handleSubmit()
     closeForm()
+    closeMesssage()
+    toggleStatus()
 }
 
 function deleteItem () {
@@ -27,12 +29,12 @@ function deleteItem () {
 
             try {
                 let resp = await send("/cnpjs-crud", "DELETE", req_body)
-                resp.ok? toggleWarning("success", "", true) : toggleWarning("error", await resp.text(), true)
+                resp.ok? toggleWarning("success", "", true) : toggleWarning("error", await resp.text(), false)
             } catch {
-                toggleWarning("error", "Falha de conexão!")
+                toggleWarning("error", "Falha de conexão!", false)
             }
         } else {
-            toggleWarning("error", "Selecione um item!")
+            toggleWarning("error", "Selecione um item!", false)
         }
     })
 }
@@ -76,9 +78,9 @@ function updateItem () {
             cnpj_text.setAttribute("data-id", id_row)
   
         } else if(selectedItems.length > 1) {
-            toggleWarning("error", "Só é possível alterar um item por vez!")
+            toggleWarning("error", "Só é possível alterar um item por vez!", false)
         } else {
-            toggleWarning("error", "Selecione um item!")
+            toggleWarning("error", "Selecione um item!", false)
         }
 
     })
@@ -99,14 +101,14 @@ function selectItems () {
 
 function send (url, req_method, req_body) {
     return fetch(url, {
-        headers: {"Content-Type" : "Application/json"},
+        headers: { "Content-Type" : "Application/json" },
         method: req_method,
-        body: JSON.stringify(req_body)
+        body: req_body ? JSON.stringify(req_body) : null
     })
 }
 
 function toggleOverlay () {
-    let overlay = document.getElementsByClassName('overlay').item(0)
+    let overlay = document.getElementsByClassName('overlay-form').item(0)
 
     overlay.style.display === "none" ? 
         overlay.style.display = "flex" : 
@@ -135,9 +137,9 @@ function handleSubmit () {
         try {
             let resp = await send("/cnpjs-crud", cnpj_id ? "PATCH" : "POST", req_body)
             resp.ok? toggleWarning("success", "", true) 
-                    : toggleWarning("error", await resp.text(), true)  
+                    : toggleWarning("error", await resp.text(), false)  
         } catch {
-            toggleWarning("error", "Falha de conexão!")
+            toggleWarning("error", "Falha de conexão!", false)
         } finally {
             toggleOverlay()
             form.reset()
@@ -154,13 +156,14 @@ function toggleWarning (type, message, reload) {
         success: document.getElementById("success"),
         error: document.getElementById("error")
     }
-
-    if(type === "error") warnings[type].innerHTML = message
+    const overlay = document.querySelector(".overlay-message")
+    overlay.classList.remove("hide")
+    overlay.classList.add("show")
+    if(type === "error") warnings.error.innerHTML = `<p>${message}</p>`
     warnings[type].className = "show"
     setTimeout(() => {
-        warnings[type].className = "hide"
         if(reload) location.reload()
-    }, 3000)
+    }, 1000)
 }
 
 function closeForm () {
@@ -168,11 +171,41 @@ function closeForm () {
     
     closeButton.addEventListener("click", () => {
         let form = document.getElementById("form")
-        let overlay = document.getElementsByClassName('overlay').item(0)
+        let overlay = document.getElementsByClassName('overlay-form').item(0)
 
         form.reset()
         cnpj.setAttribute("data-id", "")
         overlay.style.display = "none"
+    })
+}
 
+function closeMesssage () {
+    let closeButton = document.getElementsByClassName("close-message")[0]
+    
+    closeButton.addEventListener("click", () => {
+        let overlay = document.querySelector(".overlay-message")
+        overlay.classList.remove("show")
+        overlay.classList.add("hide")
+    })
+}
+
+function toggleStatus () {
+    let button = document.getElementById("button-toggle-status")
+
+    button.addEventListener('click', async () => {
+        let selectedItems = document.querySelectorAll(".selected")
+        
+        if(selectedItems.length === 0) { toggleWarning("error", "Selecione um item!", false); return }
+        if(selectedItems.length > 1) { toggleWarning("error", "Selecione apenas um item por vez!", false); return }
+
+        const id = selectedItems[0].getAttribute("data-id")
+        const status = selectedItems[0].children[1].innerHTML === "ATIVO" ? 0 : 1
+        try {
+            let resp = await send(`/cnpjs-crud/toggle-status/?id=${id}&status=${status}`, "PATCH")
+            resp.ok? toggleWarning("success", "", true) : toggleWarning("error", await resp.text(), false)
+        } catch {
+            toggleWarning("error", "Falha de conexão!", false)
+        }
+   
     })
 }

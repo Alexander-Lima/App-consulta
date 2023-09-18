@@ -7,11 +7,11 @@ module.exports = function () {
         return new Promise (async (res, rej) => {
             const results = await DAO.getAllJoinCCP().catch(err => false)
 
-            if(!results) {rej("Falha no Banco de Dados!"); return}
+            if(!results) { rej("Falha no Banco de Dados!"); return }
     
             const data = await getData(results)
 
-            if(!data) {rej("Falha na busca de CCP!"); return}
+            if(!data) { rej("Falha na busca de CCP!"); return }
 
             res(data)
         })
@@ -27,31 +27,31 @@ module.exports = function () {
                 if(error_CCPNUMBER) { item.CCP_NUMBER = "" }
                 if(!item.CCP_NUMBER) {
                     let falha = {
-                        cnpj : item.cnpj,
-                        nome_empresa : item.nome_empresa,
+                        cnpj : item.CNPJ,
+                        nome_empresa : item.NOME_EMPRESA,
                         no_ccp_number : true,
-                        municipio : item.municipio
+                        municipio : item.MUNICIPIO
                     }
                     results.push(falha)
                 } else {
                     let resp = false
                     if(!erro_FALHA) {
-                        let data = {"ccp" : Number(item.CCP_NUMBER)}
+                        let data = { "ccp" : Number(item.CCP_NUMBER) }
                         resp = await axios.post(url, data, config)
                             .catch(err => false)
                     }
                     if(resp.data) {
-                        resp.data.cnpj = item.cnpj
-                        resp.data.nome_empresa = item.nome_empresa
-                        resp.data.municipio = item.municipio
+                        resp.data.cnpj = item.CNPJ
+                        resp.data.nome_empresa = item.NOME_EMPRESA
+                        resp.data.municipio = item.MUNICIPIO
                         results.push(resp.data)
             
                     } else {
                         let falha = {
-                            cnpj : item.cnpj,
-                            nome_empresa : item.nome_empresa,
+                            cnpj : item.CNPJ,
+                            nome_empresa : item.NOME_EMPRESA,
                             failure : true,
-                            municipio : item.municipio
+                            municipio : item.MUNICIPIO
                         }
                         results.push(falha)
                     }
