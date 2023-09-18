@@ -3,7 +3,6 @@ module.exports = function (app) {
         if(req.session.userId) {
             const db = app.config.database.databaseConnection.db()
             const DAO = new app.app.models.DAO(db)
-
             try {
                 const result = await DAO.getAllJoinCCP()
                 res.status(200)

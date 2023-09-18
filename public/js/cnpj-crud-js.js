@@ -13,22 +13,18 @@ function deleteItems () {
     let button = document.getElementById("button-delete")
 
     button.addEventListener('click', async () => {
-        let itemsList = document.querySelectorAll(".selected")
+        const itemsList = document.querySelectorAll(".selected")
         
         if(itemsList.length > 0) {
-            let req_body = {ids: ""}
             let idList = []
             let userResp = confirm(`Você realmente deseja excluir ${itemsList.length === 1 ?
                                                         "o item selecionado?".toUpperCase() :
                                                         `os ${itemsList.length} itens selecionados?`}`.toUpperCase())
 
             if(!userResp) return
-
-            itemsList.forEach(item => {idList.push(item.getAttribute("data-id"))})
-            req_body.ids = idList.join(",")
-
+            itemsList.forEach(item => { idList.push(item.getAttribute("data-id")) })
             try {
-                let resp = await send("/cnpjs-crud", "DELETE", req_body)
+                const resp = await send("/cnpjs-crud", "DELETE", { idArray: idList })
                 resp.ok? toggleWarning("success", "", true) : toggleWarning("error", await resp.text(), false)
             } catch {
                 toggleWarning("error", "Falha de conexão!", false)
@@ -122,12 +118,14 @@ function handleSubmit () {
         let ccp_number = document.getElementById("ccp-number").value
         let name_text = document.getElementById('name').value
         let municipio_text = document.getElementById('municipio').value
+        let comments_text = document.getElementById('comments').value
         let req_body = {
             cnpj: cnpj.value,
             name: name_text,
             id: cnpj_id ? cnpj_id : "",
             ccp: ccp_number ? ccp_number : "",
-            municipio: municipio_text
+            municipio: municipio_text,
+            comments: comments_text ? comments_text : ""
         }
 
         try {

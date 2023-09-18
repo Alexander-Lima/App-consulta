@@ -13,9 +13,10 @@ module.exports = function (app) {
     app.post("/login", async (req, res) => {
         const db = app.config.database.databaseConnection.db()
         const DAO = new app.app.models.DAO(db)
+        const { user, pass } = req.body
 
         try {
-            const [result] = await DAO.getUserID(req.body.user, req.body.pass)
+            const result = await DAO.getUserID(user, pass)
 
             if (result) {
                 req.session.userId = result.NAME

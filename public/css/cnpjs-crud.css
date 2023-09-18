@@ -177,6 +177,16 @@ form label {
     font-size: 1.2em;
 }
 
+form > textarea {
+    width: 90%;
+    resize: none;
+    height: 10em;
+    font-size: 15px;
+    padding: 0.5em;
+    line-break: anywhere;
+    font-weight: normal;
+}
+
 .close-form {
     background-color: red;
     color: white;
