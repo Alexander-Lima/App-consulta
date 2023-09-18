@@ -25,7 +25,7 @@ module.exports = function (app) {
             const db = app.config.database.databaseConnection.db()
             const DAO = new app.app.models.DAO(db)
             try {
-                await DAO.toggleStatus(req.query.id, req.query.status)
+                await DAO.toggleStatus(req.body)
                 res.status(200)
                 res.end()
     

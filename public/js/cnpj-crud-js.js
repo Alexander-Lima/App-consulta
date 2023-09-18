@@ -1,5 +1,5 @@
 document.body.onload = function () {
-    deleteItem()
+    deleteItems()
     insertItem()
     updateItem()
     selectItems()
@@ -9,7 +9,7 @@ document.body.onload = function () {
     toggleStatus()
 }
 
-function deleteItem () {
+function deleteItems () {
     let button = document.getElementById("button-delete")
 
     button.addEventListener('click', async () => {
@@ -192,19 +192,30 @@ function toggleStatus () {
     let button = document.getElementById("button-toggle-status")
 
     button.addEventListener('click', async () => {
-        let selectedItems = document.querySelectorAll(".selected")
+        const selectedItems = document.querySelectorAll(".selected")
+        const items = []
         
         if(selectedItems.length === 0) { toggleWarning("error", "Selecione um item!", false); return }
-        if(selectedItems.length > 1) { toggleWarning("error", "Só é possível alterar um item por vez!", false); return }
 
-        const id = selectedItems[0].getAttribute("data-id")
-        const statusElement = selectedItems[0].children[1]
-        const newStatus = statusElement.innerHTML === "ATIVO" ? 0 : 1
+        selectedItems.forEach(item => {
+            const statusElement = item.children[1]
+            const newStatus = statusElement.innerHTML === "ATIVO" ? 0 : 1
+
+            items.push({
+                id : item.getAttribute("data-id"),
+                newStatus : newStatus
+            })
+        })
+
         try {
-            let resp = await send(`/cnpjs-crud/toggle-status/?id=${id}&status=${newStatus}`, "PATCH")
+            let resp = await send("/cnpjs-crud/toggle-status/", "PATCH", items)
             if(resp.ok) {
                 toggleWarning("success", "", false)
-                statusElement.innerHTML = newStatus ? "ATIVO" : "INATIVO"
+                selectedItems.forEach(item => {
+                    const statusElement = item.children[1]
+                    statusElement.innerHTML = statusElement.innerHTML === "ATIVO" ? "INATIVO" : "ATIVO"
+                })
+                unselectAll()
             } else {
                 toggleWarning("error", await resp.text(), false)
             }

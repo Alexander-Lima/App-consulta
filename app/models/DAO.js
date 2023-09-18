@@ -7,7 +7,7 @@ class DAO {
 
 DAO.prototype.getAllJoinCCP = function () {
     return new Promise((res, rej) => {
-        let sql = "SELECT CNPJ.ID, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.STATUS, CCP.CCP_NUMBER, CNPJ.MUNICIPIO"
+        let sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.STATUS, CCP.CCP_NUMBER, CNPJ.MUNICIPIO"
                 + " FROM CNPJ LEFT OUTER JOIN CCP ON CNPJ.ID=CCP.TRACKCNPJ ORDER BY CNPJ.NOME_EMPRESA;"
                 
         this.db.all(sql, (err, result) => {
@@ -19,7 +19,7 @@ DAO.prototype.getAllJoinCCP = function () {
 
 DAO.prototype.getAllCNPJ = function () {
     return new Promise((res, rej) => {
-        let sql = "SELECT CNPJ.ID, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.MUNICIPIO, YEARS.SENT FROM CNPJ LEFT OUTER JOIN " 
+        let sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.MUNICIPIO, YEARS.SENT FROM CNPJ LEFT OUTER JOIN " 
                 + "(SELECT TRACKCNPJ, GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS GROUP BY (TRACKCNPJ)) AS YEARS " 
                 + "ON CNPJ.ID = YEARS.TRACKCNPJ ORDER BY CNPJ.NOME_EMPRESA;"
 
@@ -204,15 +204,42 @@ DAO.prototype.getUserID = function (user, pass) {
     })
 }
 
-DAO.prototype.toggleStatus = function (id, status) {
-    return new Promise((res, rej) => {
-        let sql = `UPDATE CNPJ SET STATUS=${status} WHERE ID=${id};`
+DAO.prototype.toggleStatus = function (objArray) {
+    return new Promise(async (res, rej) => {
+        const enabled = []
+        const disabled = []
+        for(item of objArray) {
+            item.newStatus === 1 ? enabled.push(item.id) : disabled.push(item.id)
+        }
 
-        this.db.all(sql, (err, result) => {
-            if(err) { rej(err.message); return }
-            res(result)
-        })
+        let sqlEnabled = `UPDATE CNPJ SET STATUS=1 WHERE ID IN (${enabled.join(",")});`
+        let sqlDisabled = `UPDATE CNPJ SET STATUS=0 WHERE ID IN (${disabled.join(",")});`
+
+        try {
+            this.db.exec("BEGIN TRANSACTION;")
+            if(enabled) await updateStatus(sqlEnabled, this.db)
+            if(disabled) await updateStatus(sqlDisabled, this.db)
+            this.db.exec("END TRANSACTION;")
+            res()
+        } catch (err) {
+            rej(err.message)
+        }
     })
+
+    async function updateStatus(sql, db) {
+        return new Promise((res, rej) => {
+            db.run(sql, (err) => {
+                if(err) {
+                    console.log(sql)
+                    console.log(err)
+                    db.exec("ROLLBACK;")
+                    rej(err.message)
+                    return
+                }
+                res()
+            })
+        })
+    }
 }
 
 module.exports = function () {
