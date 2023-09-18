@@ -43,9 +43,7 @@ function insertItem () {
     let button = document.getElementById("button-new")
     
     button.addEventListener('click', async () => {
-        let selectedItems = document.querySelectorAll(".selected")
-        
-        selectedItems.forEach(item => item.classList.remove("selected"))
+        unselectAll()
         toggleOverlay()
     })
 }
@@ -63,18 +61,16 @@ function updateItem () {
             let municipio_text = document.getElementById('municipio')
             const invalidCCP = ["-", "", "----------"]
 
-            let cnpj_row = selectedItems[0].childNodes[3]
-            let ccp_row = selectedItems[0].childNodes[5]
-            let municipio_row = selectedItems[0].childNodes[7]
-            let name_row = selectedItems[0].childNodes[9]
             let id_row = selectedItems[0].getAttribute("data-id")
+            let cnpj_row = selectedItems[0].childNodes[5]
+            let name_row = selectedItems[0].childNodes[11]
+            let municipio_row = selectedItems[0].childNodes[9]
+            let ccp_row = selectedItems[0].childNodes[7]
             
             cnpj_text.value = formatCNPJ(cnpj_row.innerText)
             name_text.value = name_row.innerText
-
-            ccp_text.value = invalidCCP.includes(ccp_row.innerText) ? "" : ccp_row.innerText
-            console.log(ccp_text.value)
             municipio_text.value = municipio_row.innerText
+            ccp_text.value = invalidCCP.includes(ccp_row.innerText) ? "" : ccp_row.innerText
             cnpj_text.setAttribute("data-id", id_row)
   
         } else if(selectedItems.length > 1) {
@@ -86,20 +82,20 @@ function updateItem () {
     })
 }
 
-function selectItems () {
+function selectItems() {
     let items = document.querySelectorAll('tr');
 
     items.forEach(item => {
         item.addEventListener('click', (event) => {
             let element = event.target.parentElement
 
-            if(element.classList.contains("selected")) {element.classList.remove("selected"); return}
+            if(element.classList.contains("selected")) { element.classList.remove("selected"); return }
             element.classList.add("selected")
         })
     })
 }
 
-function send (url, req_method, req_body) {
+function send(url, req_method, req_body) {
     return fetch(url, {
         headers: { "Content-Type" : "Application/json" },
         method: req_method,
@@ -152,18 +148,19 @@ function formatCNPJ (cnpj) {
 }
 
 function toggleWarning (type, message, reload) {
-    const warnings = {
-        success: document.getElementById("success"),
-        error: document.getElementById("error")
-    }
+    const warnings = getWarnings()
     const overlay = document.querySelector(".overlay-message")
-    overlay.classList.remove("hide")
-    overlay.classList.add("show")
+    toggleClass(overlay, "hide", "show")
     if(type === "error") warnings.error.innerHTML = `<p>${message}</p>`
     warnings[type].className = "show"
-    setTimeout(() => {
-        if(reload) location.reload()
-    }, 1000)
+
+    if(type === "success") {
+        setTimeout(() => {
+            toggleClass(overlay, "show", "hide")
+            warnings[type].className = "hide"
+            if(reload) location.reload()
+        }, 1000)
+    }
 }
 
 function closeForm () {
@@ -183,9 +180,11 @@ function closeMesssage () {
     let closeButton = document.getElementsByClassName("close-message")[0]
     
     closeButton.addEventListener("click", () => {
-        let overlay = document.querySelector(".overlay-message")
-        overlay.classList.remove("show")
-        overlay.classList.add("hide")
+        const overlay = document.querySelector(".overlay-message")
+        const warnings = getWarnings()
+        toggleClass(overlay, "show", "hide")
+        toggleClass(warnings.error,"show", "hide")
+        toggleClass(warnings.success,"show", "hide")
     })
 }
 
@@ -196,16 +195,38 @@ function toggleStatus () {
         let selectedItems = document.querySelectorAll(".selected")
         
         if(selectedItems.length === 0) { toggleWarning("error", "Selecione um item!", false); return }
-        if(selectedItems.length > 1) { toggleWarning("error", "Selecione apenas um item por vez!", false); return }
+        if(selectedItems.length > 1) { toggleWarning("error", "Só é possível alterar um item por vez!", false); return }
 
         const id = selectedItems[0].getAttribute("data-id")
-        const status = selectedItems[0].children[1].innerHTML === "ATIVO" ? 0 : 1
+        const statusElement = selectedItems[0].children[1]
+        const newStatus = statusElement.innerHTML === "ATIVO" ? 0 : 1
         try {
-            let resp = await send(`/cnpjs-crud/toggle-status/?id=${id}&status=${status}`, "PATCH")
-            resp.ok? toggleWarning("success", "", true) : toggleWarning("error", await resp.text(), false)
+            let resp = await send(`/cnpjs-crud/toggle-status/?id=${id}&status=${newStatus}`, "PATCH")
+            if(resp.ok) {
+                toggleWarning("success", "", false)
+                statusElement.innerHTML = newStatus ? "ATIVO" : "INATIVO"
+            } else {
+                toggleWarning("error", await resp.text(), false)
+            }
         } catch {
             toggleWarning("error", "Falha de conexão!", false)
         }
-   
     })
+}
+
+function toggleClass(element, removedClass, addedClass) {
+    element.classList.remove(removedClass)
+    element.classList.add(addedClass)
+}
+
+function unselectAll() {
+    let selectedItems = document.querySelectorAll(".selected")
+    selectedItems.forEach(item => item.classList.remove("selected"))
+}
+
+function getWarnings() {
+    return {
+        success: document.getElementById("success"),
+        error: document.getElementById("error")
+    }
 }

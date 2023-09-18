@@ -24,6 +24,7 @@ module.exports = function () {
             }
             
             for (item of itemsList) {
+                if(item.STATUS === 0) continue
                 if(error_CCPNUMBER) { item.CCP_NUMBER = "" }
                 if(!item.CCP_NUMBER) {
                     let falha = {

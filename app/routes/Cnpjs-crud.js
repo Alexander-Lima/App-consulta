@@ -74,7 +74,6 @@ module.exports = function (app) {
                 res.status(400)
                 res.end(e)
             }
-
         } else {
             res.status(400)
             res.end("Usuário não está logado!")

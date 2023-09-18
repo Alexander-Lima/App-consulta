@@ -264,7 +264,7 @@ span {
     color: black;
     border-radius: 10px;
     padding: 5px 0px;
-    width: 12em;
+    min-width: fit-content;
 }
 
 #municipio-filter {

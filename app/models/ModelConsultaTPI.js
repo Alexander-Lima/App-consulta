@@ -6,25 +6,26 @@ const error_FALHA = false
 module.exports = function () {
     this.getTPI = (results) => {
         return new Promise (async (res, rej) => {
-            const items = await getCNPJ(results)
+            const items = await getCnpjData(results)
 
-            if(!items) {rej("Falha ao buscar empresas no Sicabom"); return}
+            if(!items) { rej("Falha ao buscar empresas no Sicabom"); return }
             
-            let data = await getData(items)
+            let data = await getTpiData(items)
 
-            if(!data) {rej("Falha ao buscar dados no Sicabom"); return}
+            if(!data) { rej("Falha ao buscar dados no Sicabom"); return }
 
             res(data)
         })
 
-        async function getCNPJ (rows) {
+        async function getCnpjData (rows) {
             let results = []
         
             for (row of rows) {
+                if(row.STATUS === 0) continue
                 let form_data = new formData()
         
                 form_data.append("acao", "buscar_logradouros")
-                form_data.append("cnpj", `${row.cnpj}`)
+                form_data.append("cnpj", `${row.CNPJ}`)
                 
                 let resp_row = false
 
@@ -35,21 +36,21 @@ module.exports = function () {
                 }
 
                 if(!resp_row) {
-                    resp_row = {data: [{SEM_REGISTRO: true}]}
-                    resp_row.data[0].CPF_CNPJ = row.cnpj
+                    resp_row = { data: [{SEM_REGISTRO: true}]} 
+                    resp_row.data[0].CPF_CNPJ = row.CNPJ
                 }
-                resp_row.data[0].SENT = row.sent ? row.sent.split(";") : false
-                resp_row.data[0].NOME_EMPRESA = row.nome_empresa
-                resp_row.data[0].ID = row.id
-                resp_row.data[0].MUNICIPIO = row.municipio
-                resp_row.data[0].SP_ID = row.sp_id
+                const data = resp_row.data[0]
+                data.SENT = row.SENT ? row.SENT.split(";") : false
+                data.NOME_EMPRESA = row.NOME_EMPRESA
+                data.ID = row.ID
+                data.MUNICIPIO = row.MUNICIPIO
                 
-                results.push(resp_row.data[0])
+                results.push(data)
             }
             return results;   
         }
         
-        async function getData (items) {
+        async function getTpiData (items) {
             let results = []
             
             for (item of items) {
@@ -61,9 +62,9 @@ module.exports = function () {
                     obj.CPF_CNPJ = item.CPF_CNPJ
         
                     objArray.push(obj)
-                    objArray.push({NOME_EMPRESA : item.NOME_EMPRESA})
-                    objArray.push({ID : item.ID})
-                    objArray.push({MUNICIPIO : item.MUNICIPIO})
+                    objArray.push({ NOME_EMPRESA : item.NOME_EMPRESA })
+                    objArray.push({ ID : item.ID })
+                    objArray.push({ MUNICIPIO : item.MUNICIPIO })
                     
                     results.push(objArray)
                     continue
@@ -88,11 +89,11 @@ module.exports = function () {
                     resp_item = {data: [{FALHOU: true}]}
                     resp_item.data[0].CPF_CNPJ = item.CPF_CNPJ
                 }
-                if(item.SENT) resp_item.data.push({SENT : item.SENT})
+                if(item.SENT) resp_item.data.push({ SENT : item.SENT })
                 
-                resp_item.data.push({NOME_EMPRESA : item.NOME_EMPRESA})
-                resp_item.data.push({ID : item.ID})
-                resp_item.data.push({MUNICIPIO : item.MUNICIPIO})
+                resp_item.data.push({ NOME_EMPRESA : item.NOME_EMPRESA })
+                resp_item.data.push({ ID : item.ID })
+                resp_item.data.push({ MUNICIPIO : item.MUNICIPIO })
                 results.push(resp_item.data)
             }
             return results;

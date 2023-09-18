@@ -14,7 +14,7 @@ module.exports = function (app) {
             res.status(200)
             res.setHeader("Access-Control-Allow-Origin", "*")
             // res.send(data)
-            res.render("./consulta-tpi", {cnpjs: data, today: todayDate})
+            res.render("./consulta-tpi", { cnpjs: data, today: todayDate} )
             res.end()
 
         } catch (e) {

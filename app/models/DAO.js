@@ -172,20 +172,6 @@ DAO.prototype.deleteItems = function (data) {
     }
 }
 
-DAO.prototype.getCountEmpresas = function (origin) {
-    return new Promise ((res, rej) => {
-        let sql = origin === "/consulta-tpi" ? 
-            "SELECT COUNT(ID) FROM CNPJ;" : 
-            "SELECT COUNT(ID) FROM CCP WHERE CCP_NUMBER > 0"
-        
-        this.db.all(sql, (err, result) => {
-            if(err) { rej(err.message); return }
-            const [COUNT] = result
-            res(COUNT)
-        }) 
-    })
-}
-
 DAO.prototype.insertSentYear = function (data) {
     return new Promise((res, rej) => {
         let sql = `INSERT INTO YEARS values(NULL, ${data.year}, ${data.id}); `
