@@ -1,6 +1,6 @@
 const axios = require('axios').default
 const formData = require('form-data')
-const error_SEMREGISTRO = false
+const error_SEM_REGISTRO = false
 const error_FALHA = false
 
 module.exports = function () {
@@ -10,7 +10,7 @@ module.exports = function () {
 
             if(!items) { rej("Falha ao buscar empresas no Sicabom"); return }
             
-            let data = await getTpiData(items)
+            const data = await getTpiData(items)
 
             if(!data) { rej("Falha ao buscar dados no Sicabom"); return }
 
@@ -29,7 +29,7 @@ module.exports = function () {
                 
                 let resp_row = false
 
-                if(!error_SEMREGISTRO) {
+                if(!error_SEM_REGISTRO) {
                     resp_row = await axios.post(
                         "https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form_data)
                         .catch(err => false)
@@ -44,6 +44,8 @@ module.exports = function () {
                 data.NOME_EMPRESA = row.NOME_EMPRESA
                 data.ID = row.ID
                 data.MUNICIPIO = row.MUNICIPIO
+                data.COMMENT_ID = row.COMMENT_ID
+                data.COMMENT_TEXT = row.COMMENT_TEXT
                 
                 results.push(data)
             }
@@ -52,7 +54,6 @@ module.exports = function () {
         
         async function getTpiData (items) {
             let results = []
-            
             for (item of items) {
                 if(item.SEM_REGISTRO) {
                     let obj = {}
@@ -65,6 +66,8 @@ module.exports = function () {
                     objArray.push({ NOME_EMPRESA : item.NOME_EMPRESA })
                     objArray.push({ ID : item.ID })
                     objArray.push({ MUNICIPIO : item.MUNICIPIO })
+                    objArray.push({ COMMENT_ID : item.COMMENT_ID })
+                    objArray.push({ COMMENT_TEXT : item.COMMENT_TEXT })
                     
                     results.push(objArray)
                     continue
@@ -94,6 +97,8 @@ module.exports = function () {
                 resp_item.data.push({ NOME_EMPRESA : item.NOME_EMPRESA })
                 resp_item.data.push({ ID : item.ID })
                 resp_item.data.push({ MUNICIPIO : item.MUNICIPIO })
+                resp_item.data.push({ COMMENT_ID : item.COMMENT_ID })
+                resp_item.data.push({ COMMENT_TEXT : item.COMMENT_TEXT })
                 results.push(resp_item.data)
             }
             return results;

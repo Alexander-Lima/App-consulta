@@ -40,7 +40,16 @@
                             <% cnpjCpfFormatted = `${results[i].cnpj.substring(0,3)}.${results[i].cnpj.substring(3,6)}.${results[i].cnpj.substring(6,9)}-${results[i].cnpj.substring(9,11)}` %>
                         <% } %>
                     <td class="td-left"><%= cnpjCpfFormatted %></td>
-                    <td class="td-center"><%= results[i].nome_empresa %></td>
+                    <td class="td-center">
+                        <%= results[i].nome_empresa %>
+                        <% if (results[i]?.comment_id && results[i]?.comment_text) { %>
+                            <div 
+                                class="comments"
+                                data-comment="<%= results[i].comment_text %>">
+                                    <img src="/images/text-box.png">
+                            </div>
+                        <% } %>
+                    </td>
                     <td class="td-mun"><%= results[i].municipio %></td>
                     <td class="td-right">
                         <ul class="status-years">

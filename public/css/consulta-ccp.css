@@ -246,3 +246,32 @@ a {
     display: inline-block;
     min-width: 2em;
 }
+
+.comments > img {
+    width: 25px;
+    height: 15px;
+    margin-left: 0.5em;
+}
+
+.comments {
+    display: inline-grid;
+    text-align: center;
+    position: absolute;
+}
+
+[data-comment]:hover::after {
+    content: attr(data-comment);
+    font-size: 15px;
+    border: 2px solid black;
+    border-radius: 10px;
+    background-color: rgb(251, 251, 214);
+    color: black;
+    padding: 0.5em;
+    position: relative;
+    left: -9em;
+    display: inline-block;
+    width: 15em;
+    min-height: fit-content;
+    word-wrap: break-word;
+    top: 0.5em;
+}

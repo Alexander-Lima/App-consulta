@@ -60,7 +60,16 @@
                             <td class="td-cnpj"><%= cnpjCpfFormatted %></td>
                             <td class="td-ccp"><%= item.CCP_NUMBER && item.CCP_NUMBER !== "NULL"? item.CCP_NUMBER : "----------" %></td>
                             <td class="td-mun"><%= item.MUNICIPIO %></td>
-                            <td class="td-name"><%= item.NOME_EMPRESA %></td>
+                            <td class="td-name">
+                                <%= item.NOME_EMPRESA %>
+                                <% if (item.COMMENT_ID && item.COMMENT_TEXT) { %>
+                                    <div 
+                                        class="comments"
+                                        data-comment="<%= item.COMMENT_TEXT %>">
+                                            <img src="/images/text-box.png">
+                                    </div>
+                                <% } %>
+                            </td>
                         </tr>
                     <% } %>
                 <% } else { %>
@@ -77,7 +86,7 @@
                 <label>RAZÃO SOCIAL</label><input type="text" maxlength="50" id="name" required/>
                 <label>MUNICÍPIO</label><input type="text" maxlength="15" id="municipio" required/>
                 <label>CCP</label><input type="text" maxlength="6" id="ccp-number" pattern="[0-9]{0,6}"/>
-                <label>COMENTÁRIOS</label><textarea id="comments"></textarea>
+                <label>COMENTÁRIOS</label><textarea id="comments" data-id=""></textarea>
                 <button type="submit">GRAVAR</button>
             </form>
         </div>

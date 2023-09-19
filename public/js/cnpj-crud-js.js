@@ -20,11 +20,10 @@ function deleteItems () {
             let userResp = confirm(`Você realmente deseja excluir ${itemsList.length === 1 ?
                                                         "o item selecionado?".toUpperCase() :
                                                         `os ${itemsList.length} itens selecionados?`}`.toUpperCase())
-
             if(!userResp) return
-            itemsList.forEach(item => { idList.push(item.getAttribute("data-id")) })
+            itemsList.forEach(item => idList.push(item.getAttribute("data-id")))
             try {
-                const resp = await send("/cnpjs-crud", "DELETE", { idArray: idList })
+                const resp = await send("/cnpjs-crud", "DELETE", idList)
                 resp.ok? toggleWarning("success", "", true) : toggleWarning("error", await resp.text(), false)
             } catch {
                 toggleWarning("error", "Falha de conexão!", false)
@@ -51,23 +50,28 @@ function updateItem () {
 
        if(selectedItems.length === 1) {
             toggleOverlay()
-            let cnpj_text = document.getElementById('cnpj')
-            let name_text = document.getElementById('name')
-            let ccp_text = document.getElementById('ccp-number')
-            let municipio_text = document.getElementById('municipio')
+            const cnpjText = document.getElementById('cnpj')
+            const nameText = document.getElementById('name')
+            const ccpText = document.getElementById('ccp-number')
+            const municipioText = document.getElementById('municipio')
+            const commentText = document.getElementById('comments')
             const invalidCCP = ["-", "", "----------"]
 
-            let id_row = selectedItems[0].getAttribute("data-id")
-            let cnpj_row = selectedItems[0].childNodes[5]
-            let name_row = selectedItems[0].childNodes[11]
-            let municipio_row = selectedItems[0].childNodes[9]
-            let ccp_row = selectedItems[0].childNodes[7]
-            
-            cnpj_text.value = formatCNPJ(cnpj_row.innerText)
-            name_text.value = name_row.innerText
-            municipio_text.value = municipio_row.innerText
-            ccp_text.value = invalidCCP.includes(ccp_row.innerText) ? "" : ccp_row.innerText
-            cnpj_text.setAttribute("data-id", id_row)
+            const idRow = selectedItems[0].getAttribute("data-id")
+            const cnpjRow = selectedItems[0].childNodes[5]
+            const nameRow = selectedItems[0].childNodes[11]
+            const municipioRow = selectedItems[0].childNodes[9]
+            const ccpRow = selectedItems[0].childNodes[7]
+            const commentRow = selectedItems[0]
+                                    ?.childNodes[11]
+                                    ?.childNodes[1]
+                                    ?.getAttribute("data-comment")
+            cnpjText.value = formatCNPJ(cnpjRow.innerText)
+            nameText.value = nameRow.innerText
+            municipioText.value = municipioRow.innerText
+            ccpText.value = invalidCCP.includes(ccpRow.innerText) ? "" : ccpRow.innerText
+            commentText.value = commentRow ? commentRow : ""
+            cnpjText.setAttribute("data-id", idRow)
   
         } else if(selectedItems.length > 1) {
             toggleWarning("error", "Só é possível alterar um item por vez!", false)
@@ -83,7 +87,8 @@ function selectItems() {
 
     items.forEach(item => {
         item.addEventListener('click', (event) => {
-            let element = event.target.parentElement
+            const element = event.target.parentElement
+            if(element.localName !== "tr") return
 
             if(element.classList.contains("selected")) { element.classList.remove("selected"); return }
             element.classList.add("selected")
@@ -113,23 +118,23 @@ function handleSubmit () {
     form.addEventListener('submit', async (event) => {
         event.preventDefault()
         
-        let cnpj = document.getElementById('cnpj')
-        let cnpj_id = cnpj.getAttribute("data-id")
-        let ccp_number = document.getElementById("ccp-number").value
-        let name_text = document.getElementById('name').value
-        let municipio_text = document.getElementById('municipio').value
-        let comments_text = document.getElementById('comments').value
-        let req_body = {
-            cnpj: cnpj.value,
-            name: name_text,
-            id: cnpj_id ? cnpj_id : "",
-            ccp: ccp_number ? ccp_number : "",
-            municipio: municipio_text,
-            comments: comments_text ? comments_text : ""
+        const cnpj = document.getElementById('cnpj')
+        const cnpjText = cnpj.value
+        const cnpjId = cnpj.getAttribute("data-id")
+        const nameText = document.getElementById('name').value
+        const ccpNumber = document.getElementById("ccp-number").value
+        const municipioText = document.getElementById('municipio').value
+        const commentsText = document.getElementById('comments').value
+        const req_body = {
+            cnpj: cnpjText,
+            cnpjId: cnpjId ,
+            name: nameText,
+            ccp: ccpNumber,
+            municipio: municipioText,
+            comments: commentsText
         }
-
         try {
-            let resp = await send("/cnpjs-crud", cnpj_id ? "PATCH" : "POST", req_body)
+            const resp = await send("/cnpjs-crud", cnpjId ? "PUT" : "POST", req_body)
             resp.ok? toggleWarning("success", "", true) 
                     : toggleWarning("error", await resp.text(), false)  
         } catch {
@@ -206,7 +211,7 @@ function toggleStatus () {
         })
 
         try {
-            let resp = await send("/cnpjs-crud/toggle-status/", "PATCH", items)
+            let resp = await send("/cnpjs-crud/toggle-status/", "PUT", items)
             if(resp.ok) {
                 toggleWarning("success", "", false)
                 selectedItems.forEach(item => {

@@ -31,7 +31,9 @@ module.exports = function () {
                         cnpj : item.CNPJ,
                         nome_empresa : item.NOME_EMPRESA,
                         no_ccp_number : true,
-                        municipio : item.MUNICIPIO
+                        municipio : item.MUNICIPIO,
+                        comment_id : item.COMMENT_ID,
+                        comment_text : item.COMMENT_TEXT
                     }
                     results.push(falha)
                 } else {
@@ -44,15 +46,18 @@ module.exports = function () {
                     if(resp.data) {
                         resp.data.cnpj = item.CNPJ
                         resp.data.nome_empresa = item.NOME_EMPRESA
-                        resp.data.municipio = item.MUNICIPIO
+                        resp.data.municipio = item.MUNICIPIO,
+                        resp.data.comment_id = item.COMMENT_ID,
+                        resp.data.comment_text = item.COMMENT_TEXT
                         results.push(resp.data)
-            
                     } else {
                         let falha = {
                             cnpj : item.CNPJ,
                             nome_empresa : item.NOME_EMPRESA,
                             failure : true,
-                            municipio : item.MUNICIPIO
+                            municipio : item.MUNICIPIO,
+                            comment_id : item.COMMENT_ID,
+                            comment_text : item.COMMENT_TEXT
                         }
                         results.push(falha)
                     }

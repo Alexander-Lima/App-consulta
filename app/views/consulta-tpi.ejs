@@ -42,6 +42,8 @@
         <% for (cnpj of cnpjs) { %>
             <% let cnpjNumber = cnpj[0].CPF_CNPJ %>
             <% let nomeEmpresa = cnpj.filter(item => item.NOME_EMPRESA)[0].NOME_EMPRESA %>
+            <% let idComentario = cnpj.filter(item => item.COMMENT_ID)[0]?.COMMENT_ID %>
+            <% let textoComentario = cnpj.filter(item => item.COMMENT_TEXT)[0]?.COMMENT_TEXT %>
             <% let municipio = cnpj.filter(item => item.MUNICIPIO)[0].MUNICIPIO %>
             <% let idEmpresa = cnpj.filter(item => item.ID)[0].ID %>
             <% let yearsObj = cnpj.filter(item => item.SENT)[0] %>
@@ -64,7 +66,16 @@
                         </li>
                     </ul>
                 </li>
-                <li class="cnpj-center"><%= nomeEmpresa %></li>
+                <li class="cnpj-center">
+                    <%= nomeEmpresa %>
+                    <% if (idComentario && textoComentario) { %>
+                        <div 
+                            class="comments"
+                            data-comment="<%= textoComentario %>">
+                                <img src="/images/text-box.png">
+                        </div>
+                    <% } %>
+                </li>
                 <li class="cnpj-mun"><%= municipio %></li>
                 <li>
                     <ul class="status" id=<%= idEmpresa %>>

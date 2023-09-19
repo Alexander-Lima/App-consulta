@@ -6,27 +6,27 @@ class DAO {
 }
 
 DAO.prototype.getAllJoinCCP = function () {
-    const sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.STATUS, CCP.CCP_NUMBER, CNPJ.MUNICIPIO"
-            + " FROM CNPJ LEFT OUTER JOIN CCP ON CNPJ.ID=CCP.TRACKCNPJ ORDER BY CNPJ.NOME_EMPRESA;"
+    const sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.STATUS, CNPJ.COMMENT_ID, CNPJ.MUNICIPIO,"
+            +" CCP.CCP_NUMBER, COMMENTS.COMMENT_TEXT FROM CNPJ LEFT OUTER JOIN CCP ON CNPJ.ID=CCP.TRACKCNPJ LEFT JOIN"
+            +" COMMENTS ON COMMENTS.ID=CNPJ.COMMENT_ID ORDER BY CNPJ.NOME_EMPRESA;"
     return this.execQueryWithResults(sql)
 }
 
 DAO.prototype.getAllCNPJ = function () {
-        let sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.MUNICIPIO," 
-                + " YEARS.SENT FROM CNPJ LEFT OUTER JOIN (SELECT TRACKCNPJ, GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS " 
-                + "GROUP BY (TRACKCNPJ)) AS YEARS ON CNPJ.ID = YEARS.TRACKCNPJ ORDER BY CNPJ.NOME_EMPRESA;"
-
+        const sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.MUNICIPIO, CNPJ.COMMENT_ID," 
+                +" COMMENTS.COMMENT_TEXT, YEARS.SENT FROM CNPJ LEFT OUTER JOIN (SELECT TRACKCNPJ, GROUP_CONCAT(YEAR, ';')" 
+                +" AS SENT FROM YEARS GROUP BY (TRACKCNPJ)) AS YEARS ON CNPJ.ID=YEARS.TRACKCNPJ LEFT JOIN COMMENTS ON"
+                +" COMMENTS.ID=CNPJ.COMMENT_ID ORDER BY CNPJ.NOME_EMPRESA;"
         return this.execQueryWithResults(sql);
 }
 
 DAO.prototype.getSentYears = function (id) {
     return new Promise((res, rej) => {
-        let sql = `SELECT GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS WHERE TRACKCNPJ=${id};`
+        let sql = `SELECT GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS WHERE TRACKCNPJ= ?;`
 
-        this.db.all(sql, (err, result) => {
+        this.db.all(sql, [id], (err, result) => {
             if(err) { rej(err); return }
             [{ SENT }] = result
-
             res(SENT ? {SENT : SENT.split(";")} : [])
         })
     })
@@ -35,21 +35,31 @@ DAO.prototype.getSentYears = function (id) {
 DAO.prototype.updateItem = function (data) {
     return new Promise (async (res, rej) => {
         try {
-            const { id, cnpj, ccp, name, municipio, comments } = data
-            const sqlCNPJ = `UPDATE CNPJ SET CNPJ="${util.sanitizeCNPJ(cnpj)}", ` 
-                    + `NOME_EMPRESA="${util.normalizeName(name)}", `
-                    + `MUNICIPIO="${util.normalizeName(municipio)}" WHERE ID=${id};`
-            const sqlCCP = `UPDATE CCP SET CCP_NUMBER=${ccp ? ccp : "NULL"} WHERE TRACKCNPJ=${id};`;
-            const sqlComments = `UPDATE COMMENTS SET COMMENT_TEXT="${comments}" WHERE ID=${id};`;
-
+            const { cnpjId, cnpj, ccp, name, municipio, comments } = data
+            const sqlFindComment = "SELECT * FROM COMMENTS WHERE ID= ?;"
+            const sqlCommentsUpdate = "UPDATE COMMENTS SET COMMENT_TEXT= ? WHERE ID= ?;"
+            const sqlCommentsInsert = "INSERT INTO COMMENTS VALUES(?, ?);"
+            const sqlCNPJ = "UPDATE CNPJ SET CNPJ= ?, NOME_EMPRESA= ?, MUNICIPIO= ?, COMMENT_ID= ? WHERE ID= ?;" 
+            const sqlCCP = "UPDATE CCP SET CCP_NUMBER= ? WHERE TRACKCNPJ= ? ;"
+            const sqlCNPJParams = [
+                util.sanitizeCNPJ(cnpj),
+                util.normalizeName(name),
+                util.normalizeName(municipio),
+                comments? cnpjId : "NULL",
+                cnpjId
+            ] 
             this.db.exec("BEGIN TRANSACTION;")
-            await this.execQuery(sqlCNPJ, "Falha ao atualizar CNPJ!")
-            await this.execQuery(sqlCCP, "Falha ao atualizar CCP!")
-            await this.execQuery(sqlComments, "Falha ao atualizar comentários!")
+            if(comments){
+                const commentExist = await this.findOne(sqlFindComment, [cnpjId])
+                if(commentExist) await this.execQuery(sqlCommentsUpdate, [comments, cnpjId], "Falha ao atualizar comentários!")
+                else await this.execQuery(sqlCommentsInsert, [cnpjId, comments], "Falha ao inserir comentários!")
+            }
+            await this.execQuery(sqlCNPJ, sqlCNPJParams, "Falha ao atualizar CNPJ!")
+            if(ccp) await this.execQuery(sqlCCP, [ccp, cnpjId], "Falha ao atualizar CCP!")
             this.db.exec("END TRANSACTION;")
             res()
         } catch (e) {
-            rej(e.message)
+            rej(e.message ? e.message : e)
         }
     })
 }
@@ -58,21 +68,24 @@ DAO.prototype.insertItem = function (data) {
     return new Promise(async (res, rej) => {
         try {
             const { cnpj, name, municipio, ccp, comments } = data
-            const sqlComments = `INSERT INTO COMMENTS VALUES(NULL, "${comments}");`
-            let commentId = null
+            const sqlCNPJ = "INSERT INTO CNPJ VALUES (NULL, ?, ?, NULL, ?, 1, NULL);"
+            const sqlUpdateCNPJ = "UPDATE CNPJ SET COMMENT_ID= ? WHERE ID= ?"
+            const sqlComments = "INSERT INTO COMMENTS VALUES(?, ?);"
+            const sqlInsertCCP = "INSERT INTO CCP VALUES (NULL, ?, ?);"
+            const sqlCNPJParams = [
+                util.sanitizeCNPJ(cnpj),
+                util.normalizeName(name),
+                util.normalizeName(municipio),
+            ]
             this.db.exec("BEGIN TRANSACTION;")
-            if(comments) { commentId = await this.insertReturningId(sqlComments, "Falha ao inserir comentário!") }
-            console.log(comments)
-            console.log(commentId)
-            const sanitizeCNPJ = util.sanitizeCNPJ(cnpj)
-            const sqlCNPJ = `INSERT INTO CNPJ VALUES (NULL, "${sanitizeCNPJ}",
-                                 "${util.normalizeName(name)}", NULL, "${util.normalizeName(municipio)}", 1, ${commentId});`
-            const id = await this.insertReturningId(sqlCNPJ, "Falha ao inserir CNPJ!")
-            const sqlInsertCCP = `INSERT INTO CCP VALUES (NULL, ${ccp ? ccp : "NULL"}, ${id});`
-            await this.execQuery(sqlInsertCCP)
+            const id = await this.insertReturningId(sqlCNPJ, sqlCNPJParams, "Falha ao inserir CNPJ!")
+            if(comments) {
+                await this.execQuery(sqlUpdateCNPJ, [id, id], "Falha ao atualizar CNPJ!")
+                await this.execQuery(sqlComments, [id, comments], "Falha ao inserir comentário!")
+            }
+            await this.execQuery(sqlInsertCCP, [ccp, id])
             this.db.exec("END TRANSACTION;")
             res()
-
         } catch (e) {
             rej(e.message ? e.message : e)
         }
@@ -81,16 +94,16 @@ DAO.prototype.insertItem = function (data) {
 
 DAO.prototype.deleteItems = function (data) {
     return new Promise(async (res, rej) => {
-        const idList = data.idArray.join(",")
         try {
-            const sqlCNPJ = `DELETE FROM CNPJ WHERE ID IN (${idList});`
-            const sqlCCP = `DELETE FROM CCP WHERE TRACKCNPJ IN (${idList});`
-            const sqlComments = `DELETE FROM COMMENTS WHERE ID IN (${idList});`
+            const placeholders = data.map(() => "?").join(",");
+            const sqlCNPJ = `DELETE FROM CNPJ WHERE ID IN (${placeholders});`
+            const sqlCCP = `DELETE FROM CCP WHERE TRACKCNPJ IN (${placeholders});`
+            const sqlComments = `DELETE FROM COMMENTS WHERE ID IN (${placeholders});`
 
             this.db.exec("BEGIN TRANSACTION;")
-            await this.execQuery(sqlCNPJ, "Falha ao deletar CNPJ!")
-            await this.execQuery(sqlCCP, "Falha ao deletar CCP!")
-            await this.execQuery(sqlComments, "Falha ao deletar comentários!")
+            await this.execQuery(sqlCNPJ, data, "Falha ao deletar CNPJ!")
+            await this.execQuery(sqlCCP, data, "Falha ao deletar CCP!")
+            await this.execQuery(sqlComments, data, "Falha ao deletar comentários!")
             this.db.exec("END TRANSACTION;")
             res()
         } catch (e) {
@@ -100,18 +113,20 @@ DAO.prototype.deleteItems = function (data) {
 }
 
 DAO.prototype.insertSentYear = function (data) {
-    let sql = `INSERT INTO YEARS values(NULL, ${data.year}, ${data.id});`
-    return this.execQuery(sql, "Falha ao inserir o ano na tabela!")
+    const { id, year } = data
+    let sql = "INSERT INTO YEARS values(NULL, ?, ?);"
+    return this.execQuery(sql, [year, id], "Falha ao inserir o ano na tabela!")
 }
 
 DAO.prototype.deleteSentYear = function (data) {
-    let sql = `DELETE FROM YEARS WHERE YEAR=${data.year} AND TRACKCNPJ=${data.id};`
-    return this.execQuery(sql, "Falha ao deletar o ano da tabela!")
+    const { id, year } = data
+    let sql = `DELETE FROM YEARS WHERE YEAR= ? AND TRACKCNPJ= ?;`
+    return this.execQuery(sql, [year, id], "Falha ao deletar o ano da tabela!")
 }
 
 DAO.prototype.getUserID = async function (user, pass) {
-    let sql = `SELECT * FROM USERS WHERE NAME="${user}" AND PASS="${pass}";`
-    return this.findOne(sql, "Usuário não encontrado!")
+    let sql = `SELECT * FROM USERS WHERE NAME= ? AND PASS= ?;`
+    return this.findOne(sql, [user, pass], "Usuário não encontrado!")
 }
 
 DAO.prototype.toggleStatus = function (objArray) {
@@ -121,14 +136,13 @@ DAO.prototype.toggleStatus = function (objArray) {
         for(item of objArray) {
             item.newStatus === 1 ? enabled.push(item.id) : disabled.push(item.id)
         }
-
-        let sqlEnabled = `UPDATE CNPJ SET STATUS=1 WHERE ID IN (${enabled.join(",")});`
-        let sqlDisabled = `UPDATE CNPJ SET STATUS=0 WHERE ID IN (${disabled.join(",")});`
+        const sqlEnabled = `UPDATE CNPJ SET STATUS=1 WHERE ID IN (?);`
+        const sqlDisabled = `UPDATE CNPJ SET STATUS=0 WHERE ID IN (?);`
 
         try {
             this.db.exec("BEGIN TRANSACTION;")
-            if(enabled) await this.execQuery(sqlEnabled, "Falha ao alterar status de itens ativos!")
-            if(disabled) await this.execQuery(sqlDisabled, "Falha ao alterar status de itens inativos!")
+            if(enabled) await this.execQuery(sqlEnabled, [enabled.join(",")], "Falha ao alterar status de itens ativos!")
+            if(disabled) await this.execQuery(sqlDisabled, [disabled.join(",")], "Falha ao alterar status de itens inativos!")
             this.db.exec("END TRANSACTION;")
             res()
         } catch (err) {
@@ -136,9 +150,9 @@ DAO.prototype.toggleStatus = function (objArray) {
         }
     })
 }
-DAO.prototype.execQuery = function(sql, message) {
-    return new Promise(async (res, rej) => {
-        this.db.exec(sql, (error) => {
+DAO.prototype.execQuery = function(sql, params, message) {
+    return new Promise((res, rej) => {
+        this.db.run(sql, params, (error) => {
             if(error) {
                 this.db.exec("ROLLBACK;")
                 rej(message ? message : error)
@@ -149,27 +163,28 @@ DAO.prototype.execQuery = function(sql, message) {
     })
 }
 
-DAO.prototype.execQueryWithResults = function(sql) {
+DAO.prototype.execQueryWithResults = function(sql, params, message) {
     return new Promise((res, rej) => {
-        this.db.all(sql, async (error, results) => {
-            if(error) { rej(message); return }
+        this.db.all(sql, params, (error, results) => {
+            if(error) { rej(message ? message : error); return }
             res(results)
         }) 
     })
 }
 
-DAO.prototype.findOne = async function(sql, message) {
+DAO.prototype.findOne = function(sql, params, message) {
     return new Promise((res, rej) => {
-        this.db.get(sql, (error, row) => {
-            if(error || row === undefined) { rej(message); return }
+        this.db.get(sql, params, (error, row) => {
+            if(error) { rej(message ? message : error); return }
+            if(row === undefined) { res(false); return }
             res(row)
         }) 
     })
 }
 
-DAO.prototype.insertReturningId = async function(sql, message) {
-    return new Promise(async (res, rej) => {
-        this.db.run(sql, function (error) {
+DAO.prototype.insertReturningId = function(sql, params, message) {
+    return new Promise((res, rej) => {
+        this.db.run(sql, params, function (error) {
             if(error) rej(message ? message : error)
             res(this.lastID)
         })

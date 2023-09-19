@@ -10,7 +10,7 @@ module.exports = function (app) {
             const data = await getCCP(DAO)
             res.status(200)
             res.setHeader("Access-Control-Allow-Origin", "*")
-            res.render('consulta-ccp', {results : data})
+            res.render('consulta-ccp', { results : data })
             res.end()
         } catch (e) {
             res.status(400)

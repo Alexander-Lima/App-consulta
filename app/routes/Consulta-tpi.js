@@ -13,10 +13,8 @@ module.exports = function (app) {
             const data = await Model.getTPI(cnpjList)
             res.status(200)
             res.setHeader("Access-Control-Allow-Origin", "*")
-            // res.send(data)
             res.render("./consulta-tpi", { cnpjs: data, today: todayDate} )
             res.end()
-
         } catch (e) {
             res.status(400)
             res.end(e.message ? e.message : e)
@@ -31,11 +29,9 @@ module.exports = function (app) {
          try {
             const yearsSent = await DAO.getSentYears(req.query.id)
             const data = await Model.updateItem(req.query.cnpj, yearsSent)
-
             res.status(200)
             res.send(data)
             res.end()
-
          } catch (e) {
              res.status(400)
              res.end(e.message ? e.message : e)

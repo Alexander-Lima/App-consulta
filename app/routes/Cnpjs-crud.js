@@ -1,6 +1,7 @@
 module.exports = function (app) {
+    const DEBUG = true;
     app.get('/cnpjs-crud', async (req, res) => {
-        if(req.session.userId) {
+        if(req.session.userId || DEBUG) {
             const db = app.config.database.databaseConnection.db()
             const DAO = new app.app.models.DAO(db)
             try {
@@ -13,14 +14,32 @@ module.exports = function (app) {
                 res.status(400)
                 res.end(e)
             }
-
         } else {
             res.redirect('/login')
         }
     })
+
+    app.put('/cnpjs-crud', async (req, res) => {
+        if(req.session.userId || DEBUG) {
+            const db = app.config.database.databaseConnection.db()
+            const DAO = new app.app.models.DAO(db)
+            try {
+                await DAO.updateItem(req.body)
+                res.status(200)
+                res.end()
     
-    app.patch('/cnpjs-crud/toggle-status/', async (req, res) => {
-        if(req.session.userId) {
+            } catch (e) {
+                res.status(400)
+                res.end(e)
+            }
+        } else {
+            res.status(400)
+            res.end("Usuário não está logado!")
+        }
+    })
+    
+    app.put('/cnpjs-crud/toggle-status/', async (req, res) => {
+        if(req.session.userId || DEBUG) {
             const db = app.config.database.databaseConnection.db()
             const DAO = new app.app.models.DAO(db)
             try {
@@ -38,30 +57,10 @@ module.exports = function (app) {
             res.end("Usuário não está logado!")
         }
     })
-    app.patch('/cnpjs-crud', async (req, res) => {
-        if(req.session.userId) {
-            const db = app.config.database.databaseConnection.db()
-            const DAO = new app.app.models.DAO(db)
-    
-            try {
-                await DAO.updateItem(req.body)
-                res.status(200)
-                res.end()
-    
-            } catch (e) {
-                res.status(400)
-                res.end(e)
-            }
-
-        } else {
-            res.status(400)
-            res.end("Usuário não está logado!")
-        }
-    })
 
 
     app.post('/cnpjs-crud', async (req, res) => {
-        if(req.session.userId) {
+        if(req.session.userId || DEBUG) {
             const db = app.config.database.databaseConnection.db()
             const DAO = new app.app.models.DAO(db)
             try {
@@ -80,10 +79,9 @@ module.exports = function (app) {
     })
 
     app.delete('/cnpjs-crud', async (req, res) => {
-        if(req.session.userId) {
+        if(req.session.userId || DEBUG) {
             const db = app.config.database.databaseConnection.db()
             const DAO = new app.app.models.DAO(db)
-    
             try {
                 await DAO.deleteItems(req.body)
                 res.status(200)
@@ -92,7 +90,6 @@ module.exports = function (app) {
                 res.status(400)
                 res.end(e)
             }
-
         } else {
             res.status(400)
             res.end("Usuário não está logado!")
