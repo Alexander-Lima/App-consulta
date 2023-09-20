@@ -12,7 +12,7 @@ module.exports = function (app) {
 
             } catch (e) {
                 res.status(400)
-                res.end(e)
+                res.end(e.message ? e.message : e)
             }
         } else {
             res.redirect('/login')
@@ -30,7 +30,7 @@ module.exports = function (app) {
     
             } catch (e) {
                 res.status(400)
-                res.end(e)
+                res.end(e.message ? e.message : e)
             }
         } else {
             res.status(400)
@@ -49,7 +49,7 @@ module.exports = function (app) {
     
             } catch (e) {
                 res.status(400)
-                res.end(e)
+                res.end(e.message ? e.message : e)
             }
 
         } else {
@@ -70,7 +70,7 @@ module.exports = function (app) {
     
             } catch (e) {
                 res.status(400)
-                res.end(e)
+                res.end(e.message ? e.message : e)
             }
         } else {
             res.status(400)
@@ -88,7 +88,7 @@ module.exports = function (app) {
                 res.end()
             } catch (e) {
                 res.status(400)
-                res.end(e)
+                res.end(e.message ? e.message : e)
             }
         } else {
             res.status(400)

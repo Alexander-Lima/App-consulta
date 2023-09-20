@@ -200,7 +200,7 @@ function updateStatusCounter() {
     total.dataset.totalstatus = visibleStatus.length
 }
 
-function markUnmarkAll () {
+function markUnmarkAll() {
     let buttons = document.querySelectorAll('.mark-unmark')
     
     buttons.forEach(button => {
@@ -220,7 +220,7 @@ function markUnmarkAll () {
     })
 }
 
-async function markUnmarkYear () {
+async function markUnmarkYear() {
     const elements = document.querySelectorAll(".vencido, .vencer-mes, .vencer-futuro")
 
     elements.forEach(element => {
@@ -232,23 +232,15 @@ async function markUnmarkYear () {
             const body = {id: id, year: year}
             
             if(!(id && body)) return
-        
             const config = {
                 method: isSent ? "DELETE" : "POST",
                 headers: {"Content-Type" : "Application/json"},
                 body: JSON.stringify(body)
             }
-    
-            switch(isSent) {
-                case false:
-                    const marked = await fetch("/consulta-tpi/marcar", config)
-                    if(marked.ok) element.classList.add("sent")
-                    break;
-        
-                case true:
-                    const unmarked = await fetch("/consulta-tpi", config)
-                    if(unmarked.ok) element.classList.remove("sent")
-            }
+            const resp = await fetch("/consulta-tpi", config)
+            if(!resp.ok) return 
+            if(isSent) element.classList.remove("sent")
+            else element.classList.add("sent")
         })
     })
 
@@ -256,11 +248,9 @@ async function markUnmarkYear () {
 
 function getParent (element, level) {
     let result = element
-
     for (let i=1; i <= level; i++) {
         result = result.parentElement
     }
-
     return result
 }
 

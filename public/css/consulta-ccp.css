@@ -27,10 +27,13 @@ li {
     width: fit-content;
     color: white;
     padding: 0.25em 0.25em;
+    min-width: 15%;
+    align-self: center;
 }
 
 .pending {
     background-color: red;
+    justify-content: center;
 }
 
 .no-pendencies {
@@ -56,13 +59,13 @@ thead {
     z-index: 1001;
     background-color: white;
     top: -0.1em;
-    margin-left: 8vw;
+    margin-left: 2vw;
 }
 
 tbody {
     position: relative;
     top: 4em;
-    left: 8vw;
+    left: 2vw;
 }
 
 tr {
@@ -73,8 +76,7 @@ tr {
 .home-icon {
     display: flex;
     align-items: center;
-    top: 1em;
-    left: 1%;
+    left: 92vw;
     gap: 3px;
     z-index: 1002;
     width: 1em;
@@ -98,15 +100,16 @@ a {
 }
 
 .th-left, .td-left {
-    width: 18vw;
+    width: 15vw;
 }
 
 .th-center, .td-center {
-    width: 30vw;
+    width: 33vw;
+    text-align: center;
 }
 
 .th-right, .td-right {
-    width: 22vw;
+    width: 34vw;
 }
 
 .th-mun, .td-mun {
@@ -117,6 +120,7 @@ a {
     background: green;
     color: white;
     padding: 0.3em 0;
+    text-align: center;
 }
 
 [data-content] {
@@ -131,7 +135,7 @@ a {
     background-color: rgb(251, 251, 214);
     color: black;
     top: 2em;
-    left: -1.6em;
+    left: -1em;
     padding: 3px;
     z-index: 10001;
     border: 2px solid black;
@@ -262,8 +266,7 @@ a {
 [data-comment]:hover::after {
     content: attr(data-comment);
     font-size: 15px;
-    border: 2px solid black;
-    border-radius: 10px;
+    border: 1px solid black;
     background-color: rgb(251, 251, 214);
     color: black;
     padding: 0.5em;
@@ -274,4 +277,5 @@ a {
     min-height: fit-content;
     word-wrap: break-word;
     top: 0.5em;
+    z-index: 10005;
 }

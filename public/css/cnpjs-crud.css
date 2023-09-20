@@ -106,7 +106,7 @@ tr:hover, .selected {
     text-align: center;
 }
 
-.menu ul li button {
+button  {
     border: 2px solid transparent;
     border-radius: 10px;
     background-color: rgb(3, 155, 229);
@@ -124,13 +124,13 @@ form button[type='submit']:hover {
     transition: 0.5s ease;
 }
 
-.menu ul li button:hover {
+button:hover {
     cursor: pointer;
     background-color: white;
     color: rgb(3, 155, 229);
 }
 
-.overlay-form, .overlay-message {
+.overlay-form, .overlay-message, .overlay-confirm {
     position: fixed;
     height: 100%;
     width: 100%;
@@ -198,6 +198,11 @@ form > textarea {
     font-size: 15px;
 }
 
+.close-form:hover {
+    background-color: red;
+    color: white;
+}
+
 .close-message {
     background-color: white;
     color: black;
@@ -209,8 +214,13 @@ form > textarea {
     top: 37vh;
     left: 62vw;
     z-index: 1001;
+    width: fit-content;
 }
 
+.close-message:hover {
+    background-color: white;
+    color: black;
+}
 
 .close-form:hover, .close-message:hover {
     cursor: pointer;
@@ -284,8 +294,7 @@ form > textarea {
 [data-comment]:hover::after {
     content: attr(data-comment);
     font-size: 15px;
-    border: 2px solid black;
-    border-radius: 10px;
+    border: 1px solid black;
     background-color: rgb(251, 251, 214);
     color: black;
     padding: 0.5em;
@@ -296,4 +305,40 @@ form > textarea {
     min-height: fit-content;
     word-wrap: break-word;
     top: 0.5em;
+    z-index: 10005;
+}
+
+.user-option {
+    background-color: white;
+    color: black;
+    border: 2px solid black;
+    border-radius: 15px;
+    padding: 1em;
+    font-size: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+    width: 20em;
+    text-align: center;
+}
+
+.user-option > div {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+#button-yes, #button-no {
+    font-size: 20px;
+}
+
+#button-yes:hover, #button-no:hover {
+    color: white;
+}
+
+#button-yes {
+    background-color: rgb(50, 205, 50);
+}
+
+#button-no {
+    background-color: red;
 }

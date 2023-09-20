@@ -7,22 +7,22 @@ class DAO {
 
 DAO.prototype.getAllJoinCCP = function () {
     const sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.STATUS, CNPJ.COMMENT_ID, CNPJ.MUNICIPIO,"
-            +" CCP.CCP_NUMBER, COMMENTS.COMMENT_TEXT FROM CNPJ LEFT OUTER JOIN CCP ON CNPJ.ID=CCP.TRACKCNPJ LEFT JOIN"
-            +" COMMENTS ON COMMENTS.ID=CNPJ.COMMENT_ID ORDER BY CNPJ.NOME_EMPRESA;"
+            +" CCP.CCP_NUMBER, COMMENTS.COMMENT_TEXT, YEARS_CCP.YEARS FROM CNPJ LEFT OUTER JOIN CCP ON CNPJ.ID=CCP.TRACKCNPJ LEFT JOIN COMMENTS"
+            +" ON COMMENTS.ID=CNPJ.COMMENT_ID LEFT JOIN YEARS_CCP ON YEARS_CCP.CNPJ_ID=CNPJ.ID ORDER BY CNPJ.NOME_EMPRESA;"
     return this.execQueryWithResults(sql)
 }
 
 DAO.prototype.getAllCNPJ = function () {
         const sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.MUNICIPIO, CNPJ.COMMENT_ID," 
                 +" COMMENTS.COMMENT_TEXT, YEARS.SENT FROM CNPJ LEFT OUTER JOIN (SELECT TRACKCNPJ, GROUP_CONCAT(YEAR, ';')" 
-                +" AS SENT FROM YEARS GROUP BY (TRACKCNPJ)) AS YEARS ON CNPJ.ID=YEARS.TRACKCNPJ LEFT JOIN COMMENTS ON"
+                +" AS SENT FROM YEARS_TPI GROUP BY (TRACKCNPJ)) AS YEARS ON CNPJ.ID=YEARS.TRACKCNPJ LEFT JOIN COMMENTS ON"
                 +" COMMENTS.ID=CNPJ.COMMENT_ID ORDER BY CNPJ.NOME_EMPRESA;"
         return this.execQueryWithResults(sql);
 }
 
-DAO.prototype.getSentYears = function (id) {
+DAO.prototype.getSentYearsTPI = function (id) {
     return new Promise((res, rej) => {
-        let sql = `SELECT GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS WHERE TRACKCNPJ= ?;`
+        let sql = `SELECT GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS_TPI WHERE TRACKCNPJ= ?;`
 
         this.db.all(sql, [id], (err, result) => {
             if(err) { rej(err); return }
@@ -114,13 +114,13 @@ DAO.prototype.deleteItems = function (data) {
 
 DAO.prototype.insertSentYear = function (data) {
     const { id, year } = data
-    let sql = "INSERT INTO YEARS values(NULL, ?, ?);"
+    let sql = "INSERT INTO YEARS_TPI VALUES(NULL, ?, ?);"
     return this.execQuery(sql, [year, id], "Falha ao inserir o ano na tabela!")
 }
 
 DAO.prototype.deleteSentYear = function (data) {
     const { id, year } = data
-    let sql = `DELETE FROM YEARS WHERE YEAR= ? AND TRACKCNPJ= ?;`
+    let sql = `DELETE FROM YEARS_TPI WHERE YEAR= ? AND TRACKCNPJ= ?;`
     return this.execQuery(sql, [year, id], "Falha ao deletar o ano da tabela!")
 }
 

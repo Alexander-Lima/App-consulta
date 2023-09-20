@@ -27,7 +27,7 @@ module.exports = function (app) {
         const Model = app.app.models.ModelConsultaTPIindividual
 
          try {
-            const yearsSent = await DAO.getSentYears(req.query.id)
+            const yearsSent = await DAO.getSentYearsTPI(req.query.id)
             const data = await Model.updateItem(req.query.cnpj, yearsSent)
             res.status(200)
             res.send(data)
@@ -38,14 +38,13 @@ module.exports = function (app) {
          }
      })
 
-     app.post("/consulta-tpi/marcar", async (req, res) => {
+     app.post("/consulta-tpi", async (req, res) => {
         const db = app.config.database.databaseConnection.db()
         const DAO = new app.app.models.DAO(db)
 
         try {
             await DAO.insertSentYear(req.body)
             res.end()
-
         } catch (e) {
             res.status(400)
             res.end(e.message ? e.message : e)
@@ -59,10 +58,22 @@ module.exports = function (app) {
         try {
             await DAO.deleteSentYear(req.body)
             res.end()
-
         } catch (e) {
             res.status(400)
             res.end(e.message ? e.message : e)
+        }
+    })
+
+    app.get("/teste", async (req, res) => {
+        const db = app.config.database.databaseConnection.db()
+        const DAO = new app.app.models.DAO(db)
+        try {
+            const results = await DAO.getAllJoinCCP()
+            console.log(results)
+        } catch (e) {
+            console.log(e)
+        } finally {
+            res.end()
         }
     })
 

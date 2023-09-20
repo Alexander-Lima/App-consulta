@@ -1,5 +1,6 @@
 document.body.onload = function () {
-    deleteItems()
+    deleteItem()
+    handleDelete()
     insertItem()
     updateItem()
     selectItems()
@@ -9,34 +10,52 @@ document.body.onload = function () {
     toggleStatus()
 }
 
-function deleteItems () {
-    let button = document.getElementById("button-delete")
+function deleteItem () {
+    const button = document.getElementById("button-delete")
 
     button.addEventListener('click', async () => {
         const itemsList = document.querySelectorAll(".selected")
-        
         if(itemsList.length > 0) {
+            const confirmOverlay = document.querySelector(".overlay-confirm")
+            const hintMessage = document.querySelector("#hint-message")
+            hintMessage.innerHTML = `Você realmente deseja excluir ${itemsList.length === 1 ?
+                                    "o item selecionado?".toUpperCase() :
+                                    `os ${itemsList.length} itens selecionados?`}`.toUpperCase()
+            toggleClass(confirmOverlay, "hide", "show")
+        } else { toggleWarning("error", "Selecione um item!", false) }
+    })
+}
+
+function handleDelete() {
+    const buttonYes = document.querySelector("#button-yes")
+    const buttonNo = document.querySelector("#button-no")
+
+    buttonYes.addEventListener("click", async () => {
+        const confirmOverlay = document.querySelector(".overlay-confirm")
+        const itemsList = document.querySelectorAll(".selected")
+        try {
             let idList = []
-            let userResp = confirm(`Você realmente deseja excluir ${itemsList.length === 1 ?
-                                                        "o item selecionado?".toUpperCase() :
-                                                        `os ${itemsList.length} itens selecionados?`}`.toUpperCase())
-            if(!userResp) return
             itemsList.forEach(item => idList.push(item.getAttribute("data-id")))
-            try {
-                const resp = await send("/cnpjs-crud", "DELETE", idList)
-                resp.ok? toggleWarning("success", "", true) : toggleWarning("error", await resp.text(), false)
-            } catch {
-                toggleWarning("error", "Falha de conexão!", false)
-            }
-        } else {
-            toggleWarning("error", "Selecione um item!", false)
-        }
+            const resp = await send("/cnpjs-crud", "DELETE", idList)
+            toggleClass(confirmOverlay, "show", "hide")
+            if(resp.ok) toggleWarning("success", "", true) 
+            else toggleWarning("error", await resp.text(), false) 
+        } catch (e) {
+            toggleClass(confirmOverlay, "show", "hide")
+            toggleWarning("error", e.message, false)
+        } finally {
+            unselectAll()}
+    })
+
+    buttonNo.addEventListener("click", () => {
+        const confirmOverlay = document.querySelector(".overlay-confirm")
+        toggleClass(confirmOverlay, "show", "hide")
+        unselectAll()
     })
 }
 
 function insertItem () {
-    let button = document.getElementById("button-new")
-    
+    const button = document.getElementById("button-new")
     button.addEventListener('click', async () => {
         unselectAll()
         toggleOverlay()
@@ -154,7 +173,7 @@ function toggleWarning (type, message, reload) {
     const warnings = getWarnings()
     const overlay = document.querySelector(".overlay-message")
     toggleClass(overlay, "hide", "show")
-    if(type === "error") warnings.error.innerHTML = `<p>${message}</p>`
+    if(type === "error") warnings.error.innerHTML = `<p>ERRO: ${message}</p>`
     warnings[type].className = "show"
 
     if(type === "success") {
@@ -234,7 +253,7 @@ function toggleClass(element, removedClass, addedClass) {
 }
 
 function unselectAll() {
-    let selectedItems = document.querySelectorAll(".selected")
+    const selectedItems = document.querySelectorAll(".selected")
     selectedItems.forEach(item => item.classList.remove("selected"))
 }
 
