@@ -53,10 +53,12 @@
     background-color: rgb(218, 214, 214);
     list-style: none;
     height: fit-content;
-    margin: 10px 10px;
     align-items: center;
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
     padding: 0.4em;
+    margin-right: 1.3em;
+    margin-left: 0.7em;
+    margin-bottom: 0.5em;
 }
 
 span {

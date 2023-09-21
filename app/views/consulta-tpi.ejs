@@ -39,22 +39,24 @@
     <div class="conteiner">
         <% let statusOptions = [] %>
         <% let municipioOptions = [] %>
-        <% for (cnpj of cnpjs) { %>
-            <% let cnpjNumber = cnpj[0].CPF_CNPJ %>
-            <% let nomeEmpresa = cnpj.filter(item => item.NOME_EMPRESA)[0].NOME_EMPRESA %>
-            <% let idComentario = cnpj.filter(item => item.COMMENT_ID)[0]?.COMMENT_ID %>
-            <% let textoComentario = cnpj.filter(item => item.COMMENT_TEXT)[0]?.COMMENT_TEXT %>
-            <% let municipio = cnpj.filter(item => item.MUNICIPIO)[0].MUNICIPIO %>
-            <% let idEmpresa = cnpj.filter(item => item.ID)[0].ID %>
-            <% let yearsObj = cnpj.filter(item => item.SENT)[0] %>
-            <% let yearsSent = yearsObj ? yearsObj.SENT : false  %>
+        <% for (let i = 0; i < cnpjs.length; i++) { %>
+            <% const cnpj = cnpjs[i].cpf_cnpj %>
+            <% const nomeEmpresa = cnpjs[i].nome_empresa %>
+            <% const idComentario = cnpjs[i].comment_id %>
+            <% const textoComentario = cnpjs[i].comment_text %>
+            <% const municipio = cnpjs[i].municipio %>
+            <% const id = cnpjs[i].id %>
+            <% const yearsSent = cnpjs[i].sent  %>
+            <% const sem_registro = cnpjs[i].sem_registro  %>
+            <% const failed = cnpjs[i].failed  %>
+            <% const debits = cnpjs[i].debits  %>
+            <% let cnpjCpfFormatted = "" %>
             <% if(!municipioOptions.includes(municipio)) {municipioOptions.push(municipio)} %>      
-
-            <ul class="cnpj" style="display: flex;" id=<%= cnpjNumber %> data-id=<%= idEmpresa %>>
-                 <% if (cnpjNumber.length === 14) { %>
-                            <% cnpjCpfFormatted = `${cnpjNumber.substring(0,2)}.${cnpjNumber.substring(2,5)}.${cnpjNumber.substring(5,8)}/${cnpjNumber.substring(8,12)}-${cnpjNumber.substring(12,14)}` %>
+            <ul class="cnpj" style="display: flex;" id=<%= cnpj %> data-id=<%= id %>>
+                 <% if (cnpj.length === 14) { %>
+                            <% cnpjCpfFormatted = `${cnpj.substring(0,2)}.${cnpj.substring(2,5)}.${cnpj.substring(5,8)}/${cnpj.substring(8,12)}-${cnpj.substring(12,14)}` %>
                         <% } else { %>
-                            <% cnpjCpfFormatted = `${cnpjNumber.substring(0,3)}.${cnpjNumber.substring(3,6)}.${cnpjNumber.substring(6,9)}-${cnpjNumber.substring(9,11)}` %>
+                            <% cnpjCpfFormatted = `${cnpj.substring(0,3)}.${cnpj.substring(3,6)}.${cnpj.substring(6,9)}-${cnpj.substring(9,11)}` %>
                         <% } %>
                 <li class="cnpj-left">
                     <ul>
@@ -78,32 +80,30 @@
                 </li>
                 <li class="cnpj-mun"><%= municipio %></li>
                 <li>
-                    <ul class="status" id=<%= idEmpresa %>>
-                        <% if (cnpj[0].SEM_REGISTRO) { %>
+                    <ul class="status" id=<%= id %>>
+                        <% if (sem_registro) { %>
                             <li class="no-register" style="display: inline-flex;"><span>SEM REGISTRO</span></li>
-                            <% if(!statusOptions.includes("SEM REGISTROS")) {statusOptions.push("SEM REGISTROS")} %>   
-                        <% } else if (cnpj[0].FALHOU) { %>
+                            <% if(!statusOptions.includes("SEM REGISTROS")) { statusOptions.push("SEM REGISTROS") } %>   
+                        <% } else if (failed) { %>
                             <li class="failure" style="display: inline-flex;"><span>FALHA AO BUSCAR DADOS</span></li>
-                            <% if(!statusOptions.includes("FALHAS")) {statusOptions.push("FALHAS")} %> 
+                            <% if(!statusOptions.includes("FALHAS")) { statusOptions.push("FALHAS") } %> 
                         <% } else { %>
-                            <% for (item of cnpj) { %>
-                                <% if (item.SITUACAO === "PAGO") { %>
-                                    <li style="display: inline-flex;" class="pago">
-                                        <span data-title=<%= item.DATA_VENCIMENTO %> 
-                                        data-barcode=<%= item.REGISTRO_CODIGO_BARRAS %>>
-                                            <%= item.ANO_PRESTACAO %> 
+                            <% for (let i = 0; i < debits.length; i++) { %>
+                                <% const situacao = debits[i].situacao %>
+                                <% const data_vencimento = debits[i].data_vencimento %>
+                                <% const codigo_barras = debits[i].codigo_barras %>
+                                <% const ano_prestacao = debits[i].ano_prestacao %>
+                                <% if (situacao == "PAGO" || situacao == "ISENTO") { %>
+                                    <% const status = situacao == "PAGO" ? "PAGOS" : "ISENTOS" %>
+                                    <li style="display: inline-flex;" class=<%= situacao.toLowerCase() %>>
+                                        <span data-title=<%= data_vencimento %> 
+                                        data-barcode=<%= situacao == "PAGO" ? codigo_barras : "" %>>
+                                            <%= ano_prestacao %> 
                                         </span>
                                     </li>
-                                    <% if(!statusOptions.includes("PAGOS")) {statusOptions.push("PAGOS")} %> 
-                                <% } else if (item.SITUACAO === "ISENTO") { %>
-                                    <li style="display: inline-flex;" class="isento">
-                                        <span data-title=<%= item.DATA_VENCIMENTO %>>
-                                            <%= item.ANO_PRESTACAO %>
-                                        </span>
-                                    </li>
-                                    <% if(!statusOptions.includes("ISENTOS")) {statusOptions.push("ISENTOS")}%> 
-                                <% } else if (item.SITUACAO) { %>
-                                    <% const itemDateArray = item.DATA_VENCIMENTO.split("/") %>
+                                    <% if(!statusOptions.includes(status)) {statusOptions.push(status)} %> 
+                                <% } else { %>
+                                    <% const itemDateArray = data_vencimento.split("/") %>
                                     <% const itemDate = new Date(itemDateArray[2], itemDateArray[1] - 1, itemDateArray[0]) %>
                                     <% const date = new Date() %>
                                     <% const currentDay = date.getDate() %>
@@ -111,38 +111,17 @@
                                     <% const currentYear = date.getFullYear() %>
                                     <% const today = new Date(currentYear, currentMonth, currentDay) %>
                                     <% const lastDayMonth = new Date(currentYear, currentMonth + 1, 0) %>
-
-                                    <% if (itemDate - today < 0) { %>
-                                        <li 
+                                    <% const expire = itemDate - today < 0 ? "vencido" : lastDayMonth - itemDate >= 0 ? "vencer-mes" : "vencer-futuro" %>
+                                    <% const status = expire == "vencido" ? "VENCIDOS" : expire == "vencer-mes" ? "VENCENDO NESTE MÊS" : "VENCIMENTO FUTURO" %>
+                                    <li 
                                         style="display: inline-flex;"
-                                        class='<%=yearsSent && yearsSent.includes(item.ANO_PRESTACAO) ? "vencido sent" : "vencido" %>'>
-                                            <span 
-                                            data-title=<%= item.DATA_VENCIMENTO %>>
-                                                <%= item.ANO_PRESTACAO %>
-                                            </span>
-                                        </li>
-                                        <% if(!statusOptions.includes("VENCIDOS")) {statusOptions.push("VENCIDOS")} %> 
-                                    <% } else if (lastDayMonth - itemDate >= 0) { %>
-                                        <li 
-                                        style="display: inline-flex;"
-                                        class='<%=yearsSent && yearsSent.includes(item.ANO_PRESTACAO) ? "vencer-mes sent" : "vencer-mes" %>'>
-                                            <span 
-                                            data-title=<%= item.DATA_VENCIMENTO %>>
-                                                <%= item.ANO_PRESTACAO %>
-                                            </span>
-                                        </li>
-                                        <% if(!statusOptions.includes("VENCENDO NESTE MÊS")) {statusOptions.push("VENCENDO NESTE MÊS")} %> 
-                                    <% } else { %>
-                                        <li 
-                                        style="display: inline-flex;"
-                                        class='<%=yearsSent && yearsSent.includes(item.ANO_PRESTACAO) ? "vencer-futuro sent" : "vencer-futuro" %>'>
-                                            <span 
-                                            data-title=<%= item.DATA_VENCIMENTO %>>
-                                                <%= item.ANO_PRESTACAO %> 
-                                            </span>
-                                        </li>
-                                        <% if(!statusOptions.includes("VENCIMENTO FUTURO")) {statusOptions.push("VENCIMENTO FUTURO")} %> 
-                                    <% } %>
+                                        class='<%= yearsSent && yearsSent.includes(ano_prestacao) ? expire + " sent" : expire %>'>
+                                        <span 
+                                        data-title=<%= data_vencimento %>>
+                                            <%= ano_prestacao %>
+                                        </span>
+                                        <% if(!statusOptions.includes(status)) {statusOptions.push(status)} %>
+                                    </li>
                                 <% } %>
                             <% } %>
                         <% } %>
@@ -157,42 +136,33 @@
     <div id="status-filter" style="display: none;">
         <div class="options-list">
             <% for(item of statusOptions) { %>
-                <% if(item === "PAGOS") { %>
-                    <div>
-                        <input type="checkbox" value="pago" class="status-option" checked="checked"/>
-                        <label>PAGOS</label>
-                    </div>
-                <% } else if(item === "VENCIDOS") { %>
-                    <div>
-                        <input type="checkbox" value="vencido" class="status-option" checked="checked"/>
-                        <label>VENCIDOS</label>
-                    </div> 
-                <% } else if(item === "VENCENDO NESTE MÊS") { %>
-                    <div>
-                        <input type="checkbox" value="vencer-mes" class="status-option" checked="checked"/>
-                        <label>VENCENDO NESTE MÊS</label>
-                    </div> 
-                <% } else if(item === "VENCIMENTO FUTURO") { %>
-                    <div>
-                        <input type="checkbox" value="vencer-futuro" class="status-option" checked="checked"/>
-                        <label>VENCIMENTO FUTURO</label>
-                    </div>
-                <% } else if(item === "SEM REGISTROS") { %>
-                    <div>
-                        <input type="checkbox" value="no-register" class="status-option" checked="checked"/>
-                        <label>SEM REGISTROS</label>
-                    </div>
-                <% } else if(item === "FALHAS") { %>
-                    <div>
-                        <input type="checkbox" value="failure" class="status-option" checked="checked"/>
-                        <label>FALHAS</label>
-                    </div>
-                <% } else if(item === "ISENTOS") { %>
-                    <div>
-                        <input type="checkbox" value="isento" class="status-option" checked="checked"/>
-                        <label>ISENTOS</label>
-                    </div>
-                <% } %>
+                <% let value = "" %>
+                <% switch (item) {
+                    case "PAGOS": %>
+                        <% value = "pago" %>
+                  <% break;
+                    case "VENCIDOS": %>
+                        <% value = "vencido" %>
+                  <% break;
+                    case "VENCENDO NESTE MÊS": %>
+                        <% value = "vencer-mes" %>
+                  <% break;
+                    case "VENCIMENTO FUTURO": %>
+                        <% value = "vencer-futuro" %>
+                  <% break;
+                    case "SEM REGISTROS": %>
+                        <% value = "no-register" %>
+                 <% break;
+                    case "FALHAS": %>
+                        <% value = "failure" %>
+                <% break;
+                    case "ISENTOS": %>
+                        <% value = "isento" %>
+                <% break; } %>
+                <div>
+                    <input type="checkbox" value=<%= value %> class="status-option" checked="checked"/>
+                    <label><%= item %></label>
+                </div>
             <% } %>
         </div>
         <div class="mark-unmark-div">

@@ -9,7 +9,7 @@ module.exports = function (app) {
         const todayDate = new Date().getTime()
         try {
             const cnpjList = await DAO.getAllJoinTPI()
-            const data = await Model.getTPI(cnpjList)
+            const data = await Model.getTPI(cnpjList.filter(cnpj => cnpj.ID === 2 || cnpj.ID === 272))
             res.setHeader("Access-Control-Allow-Origin", "*")
             res.render("./consulta-tpi", { cnpjs: data, today: todayDate} )
             res.status(200).end()

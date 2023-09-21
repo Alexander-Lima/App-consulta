@@ -25,7 +25,7 @@ module.exports = function () {
                     COMMENT_TEXT,
                     DUAM
                 } = item
-                if(STATUS === 0 || (CNPJ !== "46884635000108" && CNPJ !== "24869131000178")) continue 
+                if(STATUS === 0) continue 
                 const url = "https://sig.catalao.go.gov.br/sig/rest/servicoContribuinteController/pesquisarDebitos"
                 const configs = { headers: { "Content-Type" : "application/json" } }
                 let itemResult = {
