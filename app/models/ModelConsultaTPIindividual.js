@@ -3,60 +3,49 @@ const formData = require('form-data')
 const util = require('../utilities/util').util
 
 module.exports = function () {
-    this.updateItem = function (queryCnpj,yearsSent) {
+    this.updateItem = function (queryCnpj, yearsSent) {
         return new Promise(async (res, rej) => {
-            let sanitizedCNPJ = util.sanitizeCNPJ(queryCnpj)
-    
-            if(!sanitizedCNPJ) {rej(); return}
-    
-            let items = await getCNPJ(sanitizedCNPJ)
-            let data = await getData(items, yearsSent)
-            
+            const sanitizedCNPJ = util.sanitizeCNPJ(queryCnpj)
+            if(!sanitizedCNPJ) { rej(); return }
+            const items = await getCNPJ(sanitizedCNPJ)
+            const data = await getData(items, yearsSent)
             res(data)
         })
 
         async function getCNPJ (cnpj) {
-            let form_data = new formData()
+            const form = new formData()
     
-            form_data.append("acao", "buscar_logradouros")
-            form_data.append("cnpj", `${cnpj}`)
-            
-            let resp_row = await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form_data)
+            form.append("acao", "buscar_logradouros")
+            form.append("cnpj", `${cnpj}`)
+            const resp= await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
                                     .catch(err => false)
-            
-            if(!resp_row) {
-                resp_row = {SEM_REGISTRO: true}
-                resp_row.CPF_CNPJ = cnpj
+            if(!resp) {
+                resp = {SEM_REGISTRO: true}
+                resp.CPF_CNPJ = cnpj
             }
-
-            return resp_row;   
+            return resp;   
         }
     
         async function getData (item, yearsSent) {
             if(item.SEM_REGISTRO) return item
+            const form = new formData()
+            const data = item.data[0]
+            form.append("acao", "buscar_tpi")
+            form.append("data[CPF_CNPJ]", `${data.CPF_CNPJ}`)
+            form.append("data[C_ID]", `${data.C_ID}`)
+            form.append("data[ANO_ATUAL]", `${data.ANO_ATUAL}`)
+            form.append("data[ANO_INICIO_TPI]", `${data.ANO_INICIO_TPI}`)
+            form.append("data[SP_ID]", `${data.SP_ID}`)
             
-            let form_data = new formData()
-            let data = item.data[0]
-      
-            form_data.append("acao", "buscar_tpi")
-            form_data.append("data[CPF_CNPJ]", `${data.CPF_CNPJ}`)
-            form_data.append("data[C_ID]", `${data.C_ID}`)
-            form_data.append("data[ANO_ATUAL]", `${data.ANO_ATUAL}`)
-            form_data.append("data[ANO_INICIO_TPI]", `${data.ANO_INICIO_TPI}`)
-            form_data.append("data[SP_ID]", `${data.SP_ID}`)
-            
-            let resp_item = await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form_data)
+            const resp = await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
                                        .catch(err => false)
-
-            // let resp_item = false
-            if(!resp_item) {
-                resp_item = {FALHOU: true}
-                resp_item.CPF_CNPJ = data.CPF_CNPJ
-                return resp_item
+            if(!resp) {
+                resp = {FALHOU: true}
+                resp.CPF_CNPJ = data.CPF_CNPJ
+                return resp
             }
-            if(yearsSent.SENT) resp_item.data.push(yearsSent)
-            if(resp_item) return resp_item.data
-    
+            if(yearsSent.SENT) resp.data.push(yearsSent)
+            if(resp) return resp.data
         }
     }
     return this

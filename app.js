@@ -5,7 +5,5 @@ consign()
     .include('./app/routes')
     .then('./config/database/databaseConnection.js')
     .then('./app/models')
-    .into(app)
-
-// module.exports = app         
+    .into(app)      
  

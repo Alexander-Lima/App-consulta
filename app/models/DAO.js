@@ -152,7 +152,7 @@ DAO.prototype.deleteSentDuam = async function (data) {
     return this.execQuery(sqlUpdateDuam, [newDuamsArray.join(";"), id], "Falha ao deletar DUAM na tabela!")
 }
 
-DAO.prototype.getUserID = async function (user, pass) {
+DAO.prototype.authenticate = async function (user, pass) {
     const sql = `SELECT * FROM USERS WHERE NAME= ? AND PASS= ?;`
     return this.findOne(sql, [user, pass], "Usuário não encontrado!")
 }
