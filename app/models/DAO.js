@@ -1,18 +1,16 @@
 const util = require('../utilities/util').util
 class DAO {
-    constructor (db) {
-        this.db = db
-    }
+    constructor (db) { this.db = db }
 }
 
 DAO.prototype.getAllJoinCCP = function () {
     const sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.STATUS, CNPJ.COMMENT_ID, CNPJ.MUNICIPIO,"
-            +" CCP.CCP_NUMBER, COMMENTS.COMMENT_TEXT, YEARS_CCP.YEARS FROM CNPJ LEFT OUTER JOIN CCP ON CNPJ.ID=CCP.TRACKCNPJ LEFT JOIN COMMENTS"
-            +" ON COMMENTS.ID=CNPJ.COMMENT_ID LEFT JOIN YEARS_CCP ON YEARS_CCP.CNPJ_ID=CNPJ.ID ORDER BY CNPJ.NOME_EMPRESA;"
+            +" CCP.CCP_NUMBER, COMMENTS.COMMENT_TEXT, DUAM_CCP.DUAM FROM CNPJ LEFT OUTER JOIN CCP ON CNPJ.ID=CCP.TRACKCNPJ LEFT JOIN COMMENTS"
+            +" ON COMMENTS.ID=CNPJ.COMMENT_ID LEFT JOIN DUAM_CCP ON DUAM_CCP.CNPJ_ID=CNPJ.ID ORDER BY CNPJ.NOME_EMPRESA;"
     return this.execQueryWithResults(sql)
 }
 
-DAO.prototype.getAllCNPJ = function () {
+DAO.prototype.getAllJoinTPI = function () {
         const sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.MUNICIPIO, CNPJ.COMMENT_ID," 
                 +" COMMENTS.COMMENT_TEXT, YEARS.SENT FROM CNPJ LEFT OUTER JOIN (SELECT TRACKCNPJ, GROUP_CONCAT(YEAR, ';')" 
                 +" AS SENT FROM YEARS_TPI GROUP BY (TRACKCNPJ)) AS YEARS ON CNPJ.ID=YEARS.TRACKCNPJ LEFT JOIN COMMENTS ON"
@@ -112,20 +110,50 @@ DAO.prototype.deleteItems = function (data) {
     })
 }
 
-DAO.prototype.insertSentYear = function (data) {
+DAO.prototype.insertSentYearTPI = function (data) {
     const { id, year } = data
-    let sql = "INSERT INTO YEARS_TPI VALUES(NULL, ?, ?);"
+    const sql = "INSERT INTO YEARS_TPI VALUES(NULL, ?, ?);"
     return this.execQuery(sql, [year, id], "Falha ao inserir o ano na tabela!")
 }
 
-DAO.prototype.deleteSentYear = function (data) {
+DAO.prototype.deleteSentYearTPI = function (data) {
     const { id, year } = data
-    let sql = `DELETE FROM YEARS_TPI WHERE YEAR= ? AND TRACKCNPJ= ?;`
+    const sql = `DELETE FROM YEARS_TPI WHERE YEAR= ? AND TRACKCNPJ= ?;`
     return this.execQuery(sql, [year, id], "Falha ao deletar o ano da tabela!")
 }
 
+DAO.prototype.insertSentDuam = async function (data) {
+    const { id, duam } = data
+    const findId = "SELECT * FROM DUAM_CCP WHERE CNPJ_ID=?;"
+    const sqlInsertDuam = "INSERT INTO DUAM_CCP VALUES(NULL, ?, ?);"
+    const sqlUpdateDuam = "UPDATE DUAM_CCP SET DUAM=? WHERE CNPJ_ID=?;"
+    const objExists = await this.findOne(findId, [id], "Falha ao buscar DUAM!");
+    if(objExists) {
+        const isDuamAlreadyInserted = objExists.DUAM.includes(duam)
+        if(isDuamAlreadyInserted) return
+        const newDuams = [...objExists.DUAM.split(";"), duam]
+        return this.execQuery(sqlUpdateDuam, [newDuams.join(";"), id], "Falha ao inserir DUAM na tabela!")
+    }
+    return this.execQuery(sqlInsertDuam, [duam, id], "Falha ao inserir DUAM na tabela!")
+}
+
+DAO.prototype.deleteSentDuam = async function (data) {
+    const { id, duam } = data
+    const findId = "SELECT * FROM DUAM_CCP WHERE CNPJ_ID=?;"
+    const objExists = await this.findOne(findId, [id], "Falha ao buscar DUAM!");
+    const sqlDeleteDuam = "DELETE FROM DUAM_CCP WHERE CNPJ_ID=?;"
+    const sqlUpdateDuam = "UPDATE DUAM_CCP SET DUAM=? WHERE CNPJ_ID=?;"
+    if(!objExists) return
+    const duamsArray = objExists.DUAM?.split(";")
+    const duamExists = duamsArray.includes(duam.toString())
+    if(!duamExists) return
+    const newDuamsArray = duamsArray.filter(currentDuam => currentDuam !== duam.toString())
+    if(newDuamsArray.length === 0) return this.execQuery(sqlDeleteDuam, [id], "Falha ao deletar DUAM na tabela!")
+    return this.execQuery(sqlUpdateDuam, [newDuamsArray.join(";"), id], "Falha ao deletar DUAM na tabela!")
+}
+
 DAO.prototype.getUserID = async function (user, pass) {
-    let sql = `SELECT * FROM USERS WHERE NAME= ? AND PASS= ?;`
+    const sql = `SELECT * FROM USERS WHERE NAME= ? AND PASS= ?;`
     return this.findOne(sql, [user, pass], "Usuário não encontrado!")
 }
 

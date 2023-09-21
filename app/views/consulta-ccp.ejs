@@ -30,6 +30,7 @@
                 <% let statusList = [] %>
                 <% let municipioList = [] %>
                 <% for (let i = 0; i < results.length; i++) { %>
+                    <% const id = results[i]?.id %>
                     <% const cnpj = results[i]?.cnpj %>
                     <% const nome_empresa = results[i]?.nome_empresa %>
                     <% const no_ccp_number = results[i]?.no_ccp_number %>
@@ -37,13 +38,13 @@
                     <% const municipio = results[i]?.municipio %>
                     <% const comment_text = results[i]?.comment_text %>
                     <% const comment_id = results[i]?.comment_id %>
-                    <% const years = results[i]?.years_sent %>
+                    <% const duam_sent = results[i]?.duam_sent %>
                     <% const debits = results[i]?.debits %>
                     <% let cnpjCpfFormatted = "" %>
                     <% if(!municipioList.includes(municipio)) { %>
                         <% municipioList.push(municipio) %>
                     <% } %>
-                    <tr class="row" style="display: table-row;">
+                    <tr class="row" style="display: table-row;" data-id=<%= id %>>
                         <% if (cnpj.length === 14) { %>
                                 <% cnpjCpfFormatted = `${cnpj.substring(0,2)}.${cnpj.substring(2,5)}.${cnpj.substring(5,8)}/${cnpj.substring(8,12)}-${cnpj.substring(12,14)}` %>
                             <% } else { %>
@@ -72,10 +73,15 @@
                                 <% } else { %>
                                     <% if(debits.length > 0) { %>
                                         <% for (let i = 0; i < debits.length; i++) { %>
-                                            <% const date = debit[i].vencimento.split("-") %>
+                                            <% const date = debits[i].vencimento.split("-") %>
                                             <% const formattedDate = date[2] + "/" + date[1] + "/" + date[0] %>
                                             <% const formattedText = debits[i].receita.replaceAll(".", "").toUpperCase() %>
-                                            <li class="pending" style="display: flex;" data-content="<%= formattedText + "   " + formattedDate %>">
+                                            <% const duam = debits[i].duam.toString() %>
+                                            <li 
+                                                class='<%=duam_sent.includes(duam) ? "pending sent" : "pending" %>'
+                                                style="display: flex;"
+                                                data-content="<%= formattedText + "   " + formattedDate %>"
+                                                data-duam=<%= duam %>>
                                                 <%= formattedText.substring(0, 3) %>
                                                 <% if (!statusList.includes("pending")) {statusList.push("pending")} %>
                                             </li>
@@ -100,7 +106,7 @@
                     <% const status = statusList[i] %>
                     <div>
                         <input 
-                            type="checkbox" value="<%= item %>"
+                            type="checkbox" value="<%= status %>"
                             class="status-option" checked="checked"/>
                         <% if(status === "failure") { %>
                             <label>FALHA</label>

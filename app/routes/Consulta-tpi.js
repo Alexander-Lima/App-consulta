@@ -7,17 +7,14 @@ module.exports = function (app) {
         const DAO = new app.app.models.DAO(db)
         const Model = app.app.models.ModelConsultaTPI
         const todayDate = new Date().getTime()
-
         try {
-            const cnpjList = await DAO.getAllCNPJ()
+            const cnpjList = await DAO.getAllJoinTPI()
             const data = await Model.getTPI(cnpjList)
-            res.status(200)
             res.setHeader("Access-Control-Allow-Origin", "*")
             res.render("./consulta-tpi", { cnpjs: data, today: todayDate} )
-            res.end()
+            res.status(200).end()
         } catch (e) {
-            res.status(400)
-            res.end(e.message ? e.message : e)
+            res.status(400).end(e.message ? e.message : e)
         }
     })
 
@@ -25,56 +22,34 @@ module.exports = function (app) {
         const db = app.config.database.databaseConnection.db()
         const DAO = new app.app.models.DAO(db)
         const Model = app.app.models.ModelConsultaTPIindividual
-
          try {
             const yearsSent = await DAO.getSentYearsTPI(req.query.id)
             const data = await Model.updateItem(req.query.cnpj, yearsSent)
-            res.status(200)
-            res.send(data)
-            res.end()
+            res.status(200).send(data).end()
          } catch (e) {
-             res.status(400)
-             res.end(e.message ? e.message : e)
+            res.status(400).end(e.message ? e.message : e)
          }
      })
 
      app.post("/consulta-tpi", async (req, res) => {
         const db = app.config.database.databaseConnection.db()
         const DAO = new app.app.models.DAO(db)
-
         try {
-            await DAO.insertSentYear(req.body)
+            await DAO.insertSentYearTPI(req.body)
             res.end()
         } catch (e) {
-            res.status(400)
-            res.end(e.message ? e.message : e)
+            res.status(400).end(e.message ? e.message : e)
         }
     })
 
     app.delete("/consulta-tpi", async (req, res) => {
         const db = app.config.database.databaseConnection.db()
         const DAO = new app.app.models.DAO(db)
-
         try {
-            await DAO.deleteSentYear(req.body)
+            await DAO.deleteSentYearTPI(req.body)
             res.end()
         } catch (e) {
-            res.status(400)
-            res.end(e.message ? e.message : e)
+            res.status(400).end(e.message ? e.message : e)
         }
     })
-
-    app.get("/teste", async (req, res) => {
-        const db = app.config.database.databaseConnection.db()
-        const DAO = new app.app.models.DAO(db)
-        try {
-            const results = await DAO.getAllJoinCCP()
-            console.log(results)
-        } catch (e) {
-            console.log(e)
-        } finally {
-            res.end()
-        }
-    })
-
 }

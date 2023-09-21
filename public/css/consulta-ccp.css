@@ -76,7 +76,7 @@ tr {
 .home-icon {
     display: flex;
     align-items: center;
-    left: 92vw;
+    left: 93vw;
     gap: 3px;
     z-index: 1002;
     width: 1em;
@@ -203,7 +203,7 @@ a {
 }
 
 #no-items td {
-    width: 78vw;
+    width: 90vw;
     text-align: center;
     font-size: 1.2em;
     font-weight: bolder;
@@ -278,4 +278,16 @@ a {
     word-wrap: break-word;
     top: 0.5em;
     z-index: 10005;
+}
+
+.sent {
+    text-align: center;
+}
+.sent::before {
+    content: url(/images/ok.png);
+    top: -0.5em;
+    left: 2.2em;
+    width: 0;
+    height: 0;
+    position: relative;
 }
