@@ -9,9 +9,9 @@ const authorizationMiddleware = (req, res, next) => {
     const DEBUG = false
     let { userId } = req.session
     const { url, method } = req
-    if(DEBUG) { userId = "DEBUG" }
+    if(DEBUG) userId = "DEBUG"
     if(url.startsWith("/login") && method == "GET") {
-        if(userId) res.redirect("/cnpjs-crud")
+        if(userId) return res.redirect("/cnpjs-crud")
         return next() 
     }
     if(url.startsWith("/cnpjs-crud")) {
