@@ -9,120 +9,144 @@
     <link rel="icon" type="image/x-icon" href="/images/controller.ico">
     <script src="/js/consulta-ccp-js.js" defer></script>
 </head>
-<body>
-    <div class="home-icon">
-        <a href="/">
-            <img  src="./images/home.png">
-        </a>
-        HOME
-    </div>
-    <table id="main-table">
-        <thead>
-            <% let totalStatus = 0 %>
-            <tr>
-                <th class="th-left" data-totalcnpj="">CNPJ</th>
-                <th class="th-center">RAZÃO SOCIAL</th>
-                <th class="th-mun">MUNICÍPIO<span id="filter-municipio" class="arrow">&#8249</span></th>
-                <th class="th-right" data-totalstatus="">STATUS<span id="filter-status" class="arrow">&#8249</span></th>
-            </tr>
-        </thead>
-        <tbody>
-            <% let statusList = [] %>
-            <% let municipioList = [] %>
-            <% for (let i=0; i <= results.length-1; i++) { %>
-                <% if(!municipioList.includes(results[i].municipio)) { %>
-                    <% municipioList.push(results[i].municipio) %>
-                <% } %>
-                <tr class="row" style="display: table-row;">
-                     <% if (results[i].cnpj.length === 14) { %>
-                            <% cnpjCpfFormatted = `${results[i].cnpj.substring(0,2)}.${results[i].cnpj.substring(2,5)}.${results[i].cnpj.substring(5,8)}/${results[i].cnpj.substring(8,12)}-${results[i].cnpj.substring(12,14)}` %>
-                        <% } else { %>
-                            <% cnpjCpfFormatted = `${results[i].cnpj.substring(0,3)}.${results[i].cnpj.substring(3,6)}.${results[i].cnpj.substring(6,9)}-${results[i].cnpj.substring(9,11)}` %>
-                        <% } %>
-                    <td class="td-left"><%= cnpjCpfFormatted %></td>
-                    <td class="td-center"><%= results[i].nome_empresa %></td>
-                    <td class="td-mun"><%= results[i].municipio %></td>
-                    <td class="td-right">
-                        <ul class="status-years">
-                            <% if (results[i].no_ccp_number) { %>
-                                <li class="no-ccp" style="display: flex;">SEM CCP CADASTRADO</li>
-                                <% if (!statusList.includes("no-ccp")) {statusList.push("no-ccp")} %>
-                            <% } else if (results[i].failure) { %>
-                                <li class="failure" style="display: flex;">FALHA AO BUSCAR DADOS</li>
-                                <% if (!statusList.includes("failure")) {statusList.push("failure")} %>
-                            <% } else { %>
-                                <% if(results[i].listaRetorno.length > 0) { %>
-                                    <% for (item of results[i].listaRetorno) { %>
-                                        <% let date = item.vencimento.split("-") %>
-                                        <% let formattedDate = date[2] + "/" + date[1] + "/" + date[0] %>
-					                    <% let formattedText = item.receita.replaceAll(".", "").toUpperCase() %>
-                                        <li class="pending" style="display: flex;" data-content="<%= formattedText + "   " + formattedDate %>">
-                                            <%= formattedText.substring(0, 3) %>
-                                            <% if (!statusList.includes("pending")) {statusList.push("pending")} %>
-                                        </li>
-                                    <% } %>
-                                <% } else { %>
-                                    <li class="no-pendencies" style="display: flex;">SEM PENDÊNCIAS</li>
-                                    <% if (!statusList.includes("no-pendencies")) {statusList.push("no-pendencies")} %>
-                                <% } %>
-                            <% } %>
-                        </ul>
-                    </td>
+    <body>
+        <div class="home-icon">
+            <a href="/">
+                <img  src="./images/home.png">
+            </a>
+            HOME
+        </div>
+        <table id="main-table">
+            <thead>
+                <% let totalStatus = 0 %>
+                <tr>
+                    <th class="th-left" data-totalcnpj="">CNPJ</th>
+                    <th class="th-center">RAZÃO SOCIAL</th>
+                    <th class="th-mun">MUNICÍPIO<span id="filter-municipio" class="arrow">&#8249</span></th>
+                    <th class="th-right" data-totalstatus="">STATUS<span id="filter-status" class="arrow">&#8249</span></th>
                 </tr>
-            <% } %>
-            <tr id="no-items" style=<%= results.length !== 0 ? "display:none;" : "display:table-row;"%>>
-                <td colspan="3">Não há itens para exibir.</td>
-            </tr> 
-        </tbody>
-    </table>
-    <div id="status-filter" style="display: none;">
-        <div class="div-options">
-            <% for (let i = 0; i <= statusList.length - 1; i++) { %>
-                <div>
-                    <input 
-                        type="checkbox" value="<%= statusList[i] %>"
-                        class="status-option" checked="checked"/>
-                    <% if(statusList[i] === "failure") { %>
-                        <label>FALHA</label>
-                    <% } else if(statusList[i] === "no-pendencies") { %>
-                        <label>SEM PENDÊNCIAS</label>
-                    <% } else if(statusList[i] === "pending") { %>
-                        <label>PENDENTES</label>
-                    <% } else if(statusList[i] === "no-ccp") { %>
-                        <label>SEM CCP</label>
+            </thead>
+            <tbody>
+                <% let statusList = [] %>
+                <% let municipioList = [] %>
+                <% for (let i = 0; i < results.length; i++) { %>
+                    <% const id = results[i]?.id %>
+                    <% const cnpj = results[i]?.cnpj %>
+                    <% const nome_empresa = results[i]?.nome_empresa %>
+                    <% const no_ccp_number = results[i]?.no_ccp_number %>
+                    <% const failure = results[i]?.failure %>
+                    <% const municipio = results[i]?.municipio %>
+                    <% const comment_text = results[i]?.comment_text %>
+                    <% const comment_id = results[i]?.comment_id %>
+                    <% const duam_sent = results[i]?.duam_sent %>
+                    <% const debits = results[i]?.debits %>
+                    <% let cnpjCpfFormatted = "" %>
+                    <% if(!municipioList.includes(municipio)) { %>
+                        <% municipioList.push(municipio) %>
                     <% } %>
-                </div>
-            <% } %>
+                    <tr class="row" style="display: table-row;" data-id=<%= id %>>
+                        <% if (cnpj.length === 14) { %>
+                                <% cnpjCpfFormatted = `${cnpj.substring(0,2)}.${cnpj.substring(2,5)}.${cnpj.substring(5,8)}/${cnpj.substring(8,12)}-${cnpj.substring(12,14)}` %>
+                            <% } else { %>
+                                <% cnpjCpfFormatted = `${cnpj.substring(0,3)}.${cnpj.substring(3,6)}.${cnpj.substring(6,9)}-${cnpj.substring(9,11)}` %>
+                            <% } %>
+                        <td class="td-left"><%= cnpjCpfFormatted %></td>
+                        <td class="td-center">
+                            <%= nome_empresa %>
+                            <% if (comment_id && comment_text) { %>
+                                <div 
+                                    class="comments"
+                                    data-comment="<%= comment_text %>">
+                                        <img src="/images/text-box.png">
+                                </div>
+                            <% } %>
+                        </td>
+                        <td class="td-mun"><%= municipio %></td>
+                        <td class="td-right">
+                            <ul class="status-years">
+                                <% if (no_ccp_number) { %>
+                                    <li class="no-ccp" style="display: flex;">SEM CCP CADASTRADO</li>
+                                    <% if (!statusList.includes("no-ccp")) {statusList.push("no-ccp")} %>
+                                <% } else if (failure) { %>
+                                    <li class="failure" style="display: flex;">FALHA AO BUSCAR DADOS</li>
+                                    <% if (!statusList.includes("failure")) {statusList.push("failure")} %>
+                                <% } else { %>
+                                    <% if(debits.length > 0) { %>
+                                        <% for (let i = 0; i < debits.length; i++) { %>
+                                            <% const date = debits[i].vencimento.split("-") %>
+                                            <% const formattedDate = date[2] + "/" + date[1] + "/" + date[0] %>
+                                            <% const formattedText = debits[i].receita.replaceAll(".", "").toUpperCase() %>
+                                            <% const duam = debits[i].duam.toString() %>
+                                            <li 
+                                                class='<%=duam_sent.includes(duam) ? "pending sent" : "pending" %>'
+                                                style="display: flex;"
+                                                data-content="<%= formattedText + "   " + formattedDate %>"
+                                                data-duam=<%= duam %>>
+                                                <%= formattedText.substring(0, 3) %>
+                                                <% if (!statusList.includes("pending")) {statusList.push("pending")} %>
+                                            </li>
+                                        <% } %>
+                                    <% } else { %>
+                                        <li class="no-pendencies" style="display: flex;">SEM PENDÊNCIAS</li>
+                                        <% if (!statusList.includes("no-pendencies")) {statusList.push("no-pendencies")} %>
+                                    <% } %>
+                                <% } %>
+                            </ul>
+                        </td>
+                    </tr>
+                <% } %>
+                <tr id="no-items" style=<%= results.length !== 0 ? "display:none;" : "display:table-row;"%>>
+                    <td colspan="3">Não há itens para exibir.</td>
+                </tr> 
+            </tbody>
+        </table>
+        <div id="status-filter" style="display: none;">
+            <div class="div-options">
+                <% for (let i = 0; i < statusList.length; i++) { %>
+                    <% const status = statusList[i] %>
+                    <div>
+                        <input 
+                            type="checkbox" value="<%= status %>"
+                            class="status-option" checked="checked"/>
+                        <% if(status === "failure") { %>
+                            <label>FALHA</label>
+                        <% } else if(status === "no-pendencies") { %>
+                            <label>SEM PENDÊNCIAS</label>
+                        <% } else if(status === "pending") { %>
+                            <label>PENDENTES</label>
+                        <% } else if(status === "no-ccp") { %>
+                            <label>SEM CCP</label>
+                        <% } %>
+                    </div>
+                <% } %>
+            </div>
+            <div class="mark-unmark-div">
+                <input type="checkbox" class="mark-unmark" checked="checked"/>
+                <label id="status-mark-unmark-label">DESMARCAR TODOS</label>
+            </div>
+            <div id="status-button">
+                <button type="button" id="status-filter-button">FILTRAR</button>
+            </div>
         </div>
-        <div class="mark-unmark-div">
-            <input type="checkbox" class="mark-unmark" checked="checked"/>
-            <label id="status-mark-unmark-label">DESMARCAR TODOS</label>
+        <div id="municipio-filter" style="display: none;">
+            <div class="div-options">
+                <% for (let i = 0; i < municipioList.length; i++) { %>
+                    <% const municipio = municipioList[i] %>
+                    <div>
+                        <input 
+                            type="checkbox" value="<%= municipio %>"
+                            class="municipio-option" checked="checked"/>
+                        <label><%= municipio %></label>
+                    </div>
+                <% } %>
+            </div>
+            <div class="mark-unmark-div">
+                <input type="checkbox" class="mark-unmark" checked="checked"/>
+                <label id="municipio-mark-unmark-label">DESMARCAR TODOS</label>
+            </div>
+            <div id="municipio-button">
+                <button type="button" id="municipio-filter-button">FILTRAR</button>
+            </div>
         </div>
-        <div id="status-button">
-            <button type="button" id="status-filter-button">FILTRAR</button>
-        </div>
-    </div>
-    <div id="municipio-filter" style="display: none;">
-        <div class="div-options">
-            <% for (let i = 0; i <= municipioList.length - 1; i++) { %>
-                <div>
-                    <input 
-                        type="checkbox" value="<%= municipioList[i] %>"
-                        class="municipio-option" checked="checked"/>
-                    <label><%= municipioList[i] %></label>
-                </div>
-            <% } %>
-        </div>
-        <div class="mark-unmark-div">
-            <input type="checkbox" class="mark-unmark" checked="checked"/>
-            <label id="municipio-mark-unmark-label">DESMARCAR TODOS</label>
-        </div>
-        <div id="municipio-button">
-            <button type="button" id="municipio-filter-button">FILTRAR</button>
-        </div>
-    </div>
-    <div>
-
-    </div>
-</body>
+    </body>
 </html>

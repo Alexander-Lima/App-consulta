@@ -4,6 +4,7 @@ document.body.onload = function () {
     applyFilter()
     hideFiltersMouseOut()
     updateCounters()
+    markUnmarkDuam()
 }
 
 function hideFiltersMouseOut() {
@@ -56,14 +57,14 @@ function markUnmarkAll () {
 }
 
 function applyFilter () {
-    let filterButtons = document.querySelectorAll('[id *= filter-button]')
+    const filterButtons = document.querySelectorAll('[id *= filter-button]')
 
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
-            let type = button.id.split("-")[0]
-            let options = document.querySelectorAll('input[class*="-option"]')
-            let filterShowOptions = []
-            for (option of options) { if(option.checked) filterShowOptions.push(option.value) }
+            const type = button.id.split("-")[0]
+            const options = document.querySelectorAll('input[class*="-option"]')
+            const filterShowOptions = []
+            for (option of options) if(option.checked) filterShowOptions.push(option.value)
             filterTable(filterShowOptions)
             updateCounters()
             toggleStatusFilter(type)
@@ -121,4 +122,37 @@ function filterTable (options) {
             row.style.display = "none"
         }
     })
+}
+
+async function markUnmarkDuam() {
+    const elements = document.querySelectorAll(".pending")
+
+    elements.forEach(element => {
+        element.addEventListener('click', async (event) => {
+            const element = event.target
+            const id = getParent(element, 3).dataset?.id
+            const duam = element.getAttribute("data-duam")
+            const isSent = element.classList.contains("sent")
+            const body = {id: id, duam: duam}
+            
+            if(!(id && duam)) return
+            const config = {
+                method: isSent ? "DELETE" : "POST",
+                headers: { "Content-Type" : "Application/json" },
+                body: JSON.stringify(body)
+            }
+            const resp = await fetch("/consulta-ccp", config)
+            if(!resp.ok) return 
+            if(isSent) element.classList.remove("sent")
+            else element.classList.add("sent")
+        })
+    })
+}
+
+function getParent (element, level) {
+    let result = element
+    for (let i=1; i <= level; i++) {
+        result = result.parentElement
+    }
+    return result
 }

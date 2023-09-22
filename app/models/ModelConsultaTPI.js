@@ -1,99 +1,115 @@
 const axios = require('axios').default
 const formData = require('form-data')
-const error_SEMREGISTRO = false
+const error_SEM_REGISTRO = false
 const error_FALHA = false
 
 module.exports = function () {
     this.getTPI = (results) => {
         return new Promise (async (res, rej) => {
-            const items = await getCNPJ(results)
+            const items = await getCnpjData(results)
 
-            if(!items) {rej("Falha ao buscar empresas no Sicabom"); return}
+            if(!items) { rej("Falha ao buscar empresas no Sicabom"); return }
             
-            let data = await getData(items)
+            const data = await getTpiData(items)
 
-            if(!data) {rej("Falha ao buscar dados no Sicabom"); return}
+            if(!data) { rej("Falha ao buscar dados no Sicabom"); return }
 
             res(data)
         })
 
-        async function getCNPJ (rows) {
+        async function getCnpjData (rows) {
             let results = []
         
             for (row of rows) {
-                let form_data = new formData()
-        
-                form_data.append("acao", "buscar_logradouros")
-                form_data.append("cnpj", `${row.cnpj}`)
-                
-                let resp_row = false
-
-                if(!error_SEMREGISTRO) {
-                    resp_row = await axios.post(
-                        "https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form_data)
-                        .catch(err => false)
+                const {
+                    ID,
+                    NOME_EMPRESA,
+                    MUNICIPIO,
+                    SENT,
+                    COMMENT_ID,
+                    COMMENT_TEXT,
+                    CNPJ,
+                    STATUS
+                } = row
+                if(STATUS === 0) continue
+                let cnpjData = {
+                    id: ID,
+                    cpf_cnpj: CNPJ,
+                    nome_empresa: NOME_EMPRESA,
+                    municipio: MUNICIPIO,
+                    sent: SENT ? SENT.split(";") : [],
+                    comment_id: COMMENT_ID,
+                    comment_text: COMMENT_TEXT,
+                    sem_registro: true,
+                    failed: true,
+                    c_id: null,
+                    sp_id: null,
+                    ano_atual: null,
+                    ano_inicio_tpi: null,
+                    debits: []
                 }
-
-                if(!resp_row) {
-                    resp_row = {data: [{SEM_REGISTRO: true}]}
-                    resp_row.data[0].CPF_CNPJ = row.cnpj
+                const form = new formData()
+                let resp = false
+                form.append("acao", "buscar_logradouros")
+                form.append("cnpj", `${row.CNPJ}`)
+                if(!error_SEM_REGISTRO) {
+                    resp = await axios.post(
+                        "https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
+                        .catch(() => false)
                 }
-                resp_row.data[0].SENT = row.sent ? row.sent.split(";") : false
-                resp_row.data[0].NOME_EMPRESA = row.nome_empresa
-                resp_row.data[0].ID = row.id
-                resp_row.data[0].MUNICIPIO = row.municipio
-                resp_row.data[0].SP_ID = row.sp_id
-                
-                results.push(resp_row.data[0])
+                if(resp.data) {
+                    const { C_ID, SP_ID, ANO_ATUAL, ANO_INICIO_TPI } = resp.data[0]
+                    cnpjData.c_id = C_ID,
+                    cnpjData.sp_id = SP_ID,
+                    cnpjData.ano_atual = ANO_ATUAL,
+                    cnpjData.ano_inicio_tpi = ANO_INICIO_TPI
+                    cnpjData.sem_registro = false
+                }
+                results.push(cnpjData)
             }
             return results;   
         }
         
-        async function getData (items) {
+        async function getTpiData (items) {
             let results = []
-            
             for (item of items) {
-                if(item.SEM_REGISTRO) {
-                    let obj = {}
-                    let objArray = []
-                    
-                    obj.SEM_REGISTRO = item.SEM_REGISTRO
-                    obj.CPF_CNPJ = item.CPF_CNPJ
-        
-                    objArray.push(obj)
-                    objArray.push({NOME_EMPRESA : item.NOME_EMPRESA})
-                    objArray.push({ID : item.ID})
-                    objArray.push({MUNICIPIO : item.MUNICIPIO})
-                    
-                    results.push(objArray)
-                    continue
-                }
-                
-                let form_data = new formData()
-        
-                form_data.append("acao", "buscar_tpi")
-                form_data.append("data[CPF_CNPJ]", `${item.CPF_CNPJ}`)
-                form_data.append("data[C_ID]", `${item.C_ID}`)
-                form_data.append("data[ANO_ATUAL]", `${item.ANO_ATUAL}`)
-                form_data.append("data[ANO_INICIO_TPI]", `${item.ANO_INICIO_TPI}`)
-                form_data.append("data[SP_ID]", `${item.SP_ID}`)
-                
-                let resp_item = false
-
+                const {
+                    cpf_cnpj,
+                    c_id,
+                    ano_atual,
+                    ano_inicio_tpi,
+                    sp_id,
+                    sem_registro
+                } = item
+                if(sem_registro) { results.push(item); continue}    
+                const form = new formData()
+                form.append("acao", "buscar_tpi")
+                form.append("data[CPF_CNPJ]", `${cpf_cnpj}`)
+                form.append("data[C_ID]", `${c_id}`)
+                form.append("data[ANO_ATUAL]", `${ano_atual}`)
+                form.append("data[ANO_INICIO_TPI]", `${ano_inicio_tpi}`)
+                form.append("data[SP_ID]", `${sp_id}`)
+                let resp = false
                 if(!error_FALHA) {
-                    resp_item = await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form_data)
+                    resp = await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
                     .catch(err => false)
                 }
-                if(!resp_item) {
-                    resp_item = {data: [{FALHOU: true}]}
-                    resp_item.data[0].CPF_CNPJ = item.CPF_CNPJ
+                if(resp.data) {
+                    let debitObjects = []
+                    for(debitItem of resp.data) {
+                        const { SITUACAO, DATA_VENCIMENTO, ANO_PRESTACAO, REGISTRO_CODIGO_BARRAS } = debitItem
+                        const debit = {
+                            situacao: SITUACAO,
+                            data_vencimento: DATA_VENCIMENTO,
+                            ano_prestacao: ANO_PRESTACAO,
+                            codigo_barras: REGISTRO_CODIGO_BARRAS
+                        }
+                        debitObjects.push(debit)
+                    }
+                    item.failed = false
+                    item.debits = debitObjects
                 }
-                if(item.SENT) resp_item.data.push({SENT : item.SENT})
-                
-                resp_item.data.push({NOME_EMPRESA : item.NOME_EMPRESA})
-                resp_item.data.push({ID : item.ID})
-                resp_item.data.push({MUNICIPIO : item.MUNICIPIO})
-                results.push(resp_item.data)
+                results.push(item)
             }
             return results;
         }
