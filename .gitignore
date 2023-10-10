@@ -10,3 +10,4 @@ config/database/Sqlite3/Backup.db
 /daemon
 /copy-db.bat
 /db changes.txt
+/service.js
