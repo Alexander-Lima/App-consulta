@@ -26,7 +26,7 @@
             <li><div class="legenda-yellow"></div>VENCENDO NESTE MÊS</li>
             <li><div class="legenda-blue"></div>VENCIMENTO FUTURO</li>
             <li><div class="legenda-gray"></div>ISENTOS</li>
-            <li><div class="legenda-black"></div>SEM REGISTROS</li>
+            <li><div class="legenda-black"></div>SEM REGISTROS/INCONSISTENTE</li>
             <li><div class="legenda-orange"></div>FALHAS</li>
         </ul>
         <ul class="fixed-headers">
@@ -47,9 +47,10 @@
             <% const municipio = cnpjs[i].municipio %>
             <% const id = cnpjs[i].id %>
             <% const yearsSent = cnpjs[i].sent  %>
-            <% const sem_registro = cnpjs[i].sem_registro  %>
+            <% const semRegistro = cnpjs[i].sem_registro  %>
             <% const failed = cnpjs[i].failed  %>
             <% const debits = cnpjs[i].debits  %>
+            <% const isInconsistent = cnpjs[i].inconsistent %>
             <% let cnpjCpfFormatted = "" %>
             <% if(!municipioOptions.includes(municipio)) {municipioOptions.push(municipio)} %>      
             <ul class="cnpj" style="display: flex;" id=<%= cnpj %> data-id=<%= id %>>
@@ -81,12 +82,15 @@
                 <li class="cnpj-mun"><%= municipio %></li>
                 <li>
                     <ul class="status" id=<%= id %>>
-                        <% if (sem_registro) { %>
+                        <% if (semRegistro) { %>
                             <li class="no-register" style="display: inline-flex;"><span>SEM REGISTRO</span></li>
                             <% if(!statusOptions.includes("SEM REGISTROS")) { statusOptions.push("SEM REGISTROS") } %>   
                         <% } else if (failed) { %>
                             <li class="failure" style="display: inline-flex;"><span>FALHA AO BUSCAR DADOS</span></li>
                             <% if(!statusOptions.includes("FALHAS")) { statusOptions.push("FALHAS") } %> 
+                        <% } else if (isInconsistent) { %>  
+                            <li class="inconsistent" style="display: inline-flex;"><span>DADOS INCONSISTENTES</span></li>
+                            <% if(!statusOptions.includes("INCONSISTENTES")) { statusOptions.push("INCONSISTENTES") } %>
                         <% } else { %>
                             <% for (let i = 0; i < debits.length; i++) { %>
                                 <% const situacao = debits[i].situacao %>
@@ -152,6 +156,9 @@
                   <% break;
                     case "SEM REGISTROS": %>
                         <% value = "no-register" %>
+                 <% break;
+                 case "INCONSISTENTES": %>
+                        <% value = "inconsistent" %>
                  <% break;
                     case "FALHAS": %>
                         <% value = "failure" %>

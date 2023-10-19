@@ -17,7 +17,7 @@ module.exports = function () {
     
             form.append("acao", "buscar_logradouros")
             form.append("cnpj", `${cnpj}`)
-            const resp= await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
+            let resp= await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
                                     .catch(err => false)
             if(!resp) {
                 resp = {SEM_REGISTRO: true}

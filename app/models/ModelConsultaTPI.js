@@ -41,6 +41,7 @@ module.exports = function () {
                     comment_id: COMMENT_ID,
                     comment_text: COMMENT_TEXT,
                     sem_registro: true,
+                    inconsistent: false,
                     failed: true,
                     c_id: null,
                     sp_id: null,
@@ -97,13 +98,14 @@ module.exports = function () {
                 if(resp.data) {
                     let debitObjects = []
                     for(debitItem of resp.data) {
-                        const { SITUACAO, DATA_VENCIMENTO, ANO_PRESTACAO, REGISTRO_CODIGO_BARRAS } = debitItem
+                        const { SITUACAO, DATA_VENCIMENTO, ANO_PRESTACAO, REGISTRO_CODIGO_BARRAS, VALOR_TOTAL } = debitItem
                         const debit = {
                             situacao: SITUACAO,
                             data_vencimento: DATA_VENCIMENTO,
                             ano_prestacao: ANO_PRESTACAO,
-                            codigo_barras: REGISTRO_CODIGO_BARRAS
+                            codigo_barras: REGISTRO_CODIGO_BARRAS,
                         }
+                        if(VALOR_TOTAL == "-1") item.inconsistent = true
                         debitObjects.push(debit)
                     }
                     item.failed = false

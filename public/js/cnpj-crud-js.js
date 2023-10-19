@@ -8,6 +8,8 @@ document.body.onload = function () {
     closeForm()
     closeMesssage()
     toggleStatus()
+    selectAllButtonHandle()
+    unselectAllButtonHandle()
 }
 
 function deleteItem () {
@@ -113,6 +115,21 @@ function selectItems() {
             element.classList.add("selected")
         })
     })
+}
+
+function selectAllButtonHandle() {
+    const button = document.getElementById('button-select-all');
+
+    button.addEventListener('click', () => {
+        const elements = document.querySelectorAll("tr")
+        elements.forEach(element => element.classList.add("selected"));
+    })
+}
+
+function unselectAllButtonHandle() {
+    const button = document.getElementById('button-unselect-all');
+
+    button.addEventListener('click', () => unselectAll())
 }
 
 function send(url, req_method, req_body) {

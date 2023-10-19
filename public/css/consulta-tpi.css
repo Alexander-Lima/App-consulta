@@ -32,7 +32,7 @@
 }
 
 .col4 {
-    width: 30.5vw;
+    width: 31.8vw;
 }
 
 .fixed-headers {
@@ -68,7 +68,7 @@ span {
     padding: 5px;
 }
 
-.no-register span {
+.no-register span, .inconsistent span {
     background-color: black;
     color: white;
     font-size: 13px;
@@ -204,10 +204,10 @@ span {
     list-style: none;
     margin-top: 25px;
     margin-bottom: 25px;
-    width: 80%;
+    width: 85%;
     justify-content: space-between;
     top: 0px;
-    margin-left: 12vw;
+    margin-left: 11vw;
 }
 
 .legenda li {
@@ -232,7 +232,7 @@ span {
     align-items: center;
     position: absolute;
     top: 18%;
-    left: 5%;
+    left: 4%;
     gap: 3px;
 }
 

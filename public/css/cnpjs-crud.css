@@ -94,8 +94,8 @@ tr:hover, .selected {
 
 .menu {
     position: fixed;
-    top: 45vh;
-    left: 88.5vw;
+    top: 32vh;
+    left: 87.5vw;
 }
 
 .menu ul {
@@ -113,8 +113,8 @@ button  {
     padding: 0px 10px;
     color: white;
     border: 2px solid black;
-    width: 120px;
-    padding: 3px 0px;
+    width: 135px;
+    padding: 3px 5px;
 }
 
 form button[type='submit']:hover {
