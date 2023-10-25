@@ -81,7 +81,7 @@ DAO.prototype.insertItem = function (data) {
                 await this.execQuery(sqlUpdateCNPJ, [id, id], "Falha ao atualizar CNPJ!")
                 await this.execQuery(sqlComments, [id, comments], "Falha ao inserir comentário!")
             }
-            await this.execQuery(sqlInsertCCP, [ccp, id])
+            if(ccp) await this.execQuery(sqlInsertCCP, [ccp, id])
             this.db.exec("END TRANSACTION;")
             res()
         } catch (e) {
