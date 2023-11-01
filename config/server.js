@@ -34,7 +34,7 @@ app.use(authorizationMiddleware);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser())
 app.use(bodyParser.json())
-app.listen(8080, ip.address(), () => { console.log("Aplicação de Consultas Prefeitura e Sicabom está rodando...") });
+app.listen(3000, ip.address(), () => { console.log("Aplicação de Consultas Prefeitura e Sicabom está rodando...") });
 
 module.exports = app   
   
