@@ -35,25 +35,35 @@ DAO.prototype.updateItem = function (data) {
         try {
             const { cnpjId, cnpj, ccp, name, municipio, comments } = data
             const sqlFindComment = "SELECT * FROM COMMENTS WHERE ID= ?;"
-            const sqlCommentsUpdate = "UPDATE COMMENTS SET COMMENT_TEXT= ? WHERE ID= ?;"
-            const sqlCommentsInsert = "INSERT INTO COMMENTS VALUES(?, ?);"
+            const sqlFindCCP = "SELECT * FROM CCP WHERE TRACKCNPJ= ?;"
+            const sqlUpdateComments = "UPDATE COMMENTS SET COMMENT_TEXT= ? WHERE ID= ?;"
+            const sqlInsertComments = "INSERT INTO COMMENTS VALUES(?, ?);"
+            const sqlInsertCCP = "INSERT INTO CCP VALUES (NULL, ?, ?);"
             const sqlCNPJ = "UPDATE CNPJ SET CNPJ= ?, NOME_EMPRESA= ?, MUNICIPIO= ?, COMMENT_ID= ? WHERE ID= ?;" 
-            const sqlCCP = "UPDATE CCP SET CCP_NUMBER= ? WHERE TRACKCNPJ= ? ;"
+            const sqlUpdateCCP = "UPDATE CCP SET CCP_NUMBER= ? WHERE TRACKCNPJ= ? ;"
+            const deleteCCP = "DELETE FROM COMMENTS WHERE ID= ?; "
+            const deleteComment = "DELETE FROM CCP WHERE TRACKCNPJ= ?; "
             const sqlCNPJParams = [
                 util.sanitizeCNPJ(cnpj),
                 util.normalizeName(name),
                 util.normalizeName(municipio),
-                comments? cnpjId : "NULL",
+                comments ? cnpjId : null,
                 cnpjId
             ] 
             this.db.exec("BEGIN TRANSACTION;")
             if(comments){
-                const commentExist = await this.findOne(sqlFindComment, [cnpjId])
-                if(commentExist) await this.execQuery(sqlCommentsUpdate, [comments, cnpjId], "Falha ao atualizar comentários!")
-                else await this.execQuery(sqlCommentsInsert, [cnpjId, comments], "Falha ao inserir comentários!")
-            }
+                const commentExists = await this.findOne(sqlFindComment, [cnpjId])
+                if(commentExists) await this.execQuery(sqlUpdateComments, [comments, cnpjId], "Falha ao atualizar comentários!")
+                else await this.execQuery(sqlInsertComments, [cnpjId, comments], "Falha ao inserir comentários!")
+            } else this.execQuery(deleteComment, [cnpjId], "Falha ao deletar comentários!")
+        
+            if(ccp) {
+                const ccpExists = await this.findOne(sqlFindCCP, [cnpjId])
+                if(ccpExists) await this.execQuery(sqlUpdateCCP, [ccp, cnpjId], "Falha ao atualizar CCP!")
+                else this.execQuery(sqlInsertCCP, [ccp, cnpjId], "Falha ao inserir CCP!")
+            } else await this.execQuery(deleteCCP, [cnpjId], "Falha ao deletar CCP!")
+            
             await this.execQuery(sqlCNPJ, sqlCNPJParams, "Falha ao atualizar CNPJ!")
-            if(ccp) await this.execQuery(sqlCCP, [ccp, cnpjId], "Falha ao atualizar CCP!")
             this.db.exec("END TRANSACTION;")
             res()
         } catch (e) {
@@ -93,15 +103,16 @@ DAO.prototype.insertItem = function (data) {
 DAO.prototype.deleteItems = function (data) {
     return new Promise(async (res, rej) => {
         try {
+            const cnpjList = data
             const placeholders = data.map(() => "?").join(",");
             const sqlCNPJ = `DELETE FROM CNPJ WHERE ID IN (${placeholders});`
             const sqlCCP = `DELETE FROM CCP WHERE TRACKCNPJ IN (${placeholders});`
             const sqlComments = `DELETE FROM COMMENTS WHERE ID IN (${placeholders});`
 
             this.db.exec("BEGIN TRANSACTION;")
-            await this.execQuery(sqlCNPJ, data, "Falha ao deletar CNPJ!")
-            await this.execQuery(sqlCCP, data, "Falha ao deletar CCP!")
-            await this.execQuery(sqlComments, data, "Falha ao deletar comentários!")
+            await this.execQuery(sqlCNPJ, cnpjList, "Falha ao deletar CNPJ!")
+            await this.execQuery(sqlCCP, cnpjList, "Falha ao deletar CCP!")
+            await this.execQuery(sqlComments, cnpjList, "Falha ao deletar comentários!")
             this.db.exec("END TRANSACTION;")
             res()
         } catch (e) {
