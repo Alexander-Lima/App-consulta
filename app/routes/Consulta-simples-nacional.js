@@ -10,6 +10,7 @@ module.exports = function (app) {
             res.setHeader('Content-Type', 'application/json');
             res.end(JSON.stringify({ isOptante: result }));
         } catch (e) {
+            console.log('error')
             res.status(400).end(e?.message ? e?.message : e)
         }
     })
