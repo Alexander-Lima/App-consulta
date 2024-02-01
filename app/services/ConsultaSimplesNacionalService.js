@@ -28,8 +28,9 @@ module.exports = function() {
                 await browser.close();
                 if(resultElements.length > 0) {
                     res(isOptante(resultElements));
+                } else {
+                    rej();
                 }
-                res(false);
             })();
         })
     }
