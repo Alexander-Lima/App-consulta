@@ -5,6 +5,7 @@ document.body.onload = function () {
     hideFiltersMouseOut()
     updateCounters()
     markUnmarkDuam()
+    markLicenseSent()
 }
 
 function hideFiltersMouseOut() {
@@ -145,6 +146,29 @@ async function markUnmarkDuam() {
             if(!resp.ok) return 
             if(isSent) element.classList.remove("sent")
             else element.classList.add("sent")
+        })
+    })
+}
+
+async function markLicenseSent() {
+    const elements = document.querySelectorAll(".no-pendencies")
+
+    elements.forEach(element => {
+        element.addEventListener('click', async (event) => {
+            const element = event.target
+            const elementText = element.innerText
+            const id = getParent(element, 3).dataset?.id
+            const isSent = elementText == "ENVIADO"
+           
+            const config = {
+                method: "POST",
+                headers: { "Content-Type" : "text/html" },
+            }
+            const resp = await fetch(`/mark-license-sent?id=${id}&status=${isSent ? "0" : "1"}`, config)
+            if(!resp.ok) {
+                return console.log(await resp.text())
+            }
+            element.innerText  = isSent ? "SEM PENDÊNCIAS" : "ENVIADO"
         })
     })
 }

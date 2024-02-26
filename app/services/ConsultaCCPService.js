@@ -23,7 +23,8 @@ module.exports = function () {
                     MUNICIPIO,
                     COMMENT_ID,
                     COMMENT_TEXT,
-                    DUAM
+                    DUAM,
+                    LICENSES_SENT
                 } = item
                 if(STATUS === 0) continue 
                 const url = "https://sig.catalao.go.gov.br/sig/rest/servicoContribuinteController/pesquisarDebitos"
@@ -38,7 +39,8 @@ module.exports = function () {
                     comment_id: COMMENT_ID,
                     comment_text: COMMENT_TEXT,
                     duam_sent: DUAM ? DUAM.split(";") : [],
-                    debits: []
+                    debits: [],
+                    license_sent: LICENSES_SENT
                 }
                 if(!CCP_NUMBER) {
                     itemResult.failure = false

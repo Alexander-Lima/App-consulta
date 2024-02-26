@@ -5,8 +5,9 @@ class DAO {
 
 DAO.prototype.getAllJoinCCP = function () {
     const sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.STATUS, CNPJ.COMMENT_ID, CNPJ.MUNICIPIO,"
-            +" CCP.CCP_NUMBER, COMMENTS.COMMENT_TEXT, DUAM_CCP.DUAM FROM CNPJ LEFT OUTER JOIN CCP ON CNPJ.ID=CCP.TRACKCNPJ LEFT JOIN COMMENTS"
-            +" ON COMMENTS.ID=CNPJ.COMMENT_ID LEFT JOIN DUAM_CCP ON DUAM_CCP.CNPJ_ID=CNPJ.ID ORDER BY CNPJ.NOME_EMPRESA;"
+            +" CNPJ.LICENSES_SENT, CCP.CCP_NUMBER, COMMENTS.COMMENT_TEXT, DUAM_CCP.DUAM FROM CNPJ LEFT OUTER JOIN CCP ON"
+            +" CNPJ.ID=CCP.TRACKCNPJ LEFT JOIN COMMENTS ON COMMENTS.ID=CNPJ.COMMENT_ID LEFT JOIN DUAM_CCP ON"
+            +" DUAM_CCP.CNPJ_ID=CNPJ.ID ORDER BY CNPJ.NOME_EMPRESA;"
     return this.execQueryWithResults(sql)
 }
 
@@ -64,6 +65,21 @@ DAO.prototype.updateItem = function (data) {
             } else await this.execQuery(sqlDeleteCCP, [cnpjId], "Falha ao deletar CCP!")
             
             await this.execQuery(sqlCNPJ, sqlCNPJParams, "Falha ao atualizar CNPJ!")
+            this.db.exec("END TRANSACTION;")
+            res()
+        } catch (e) {
+            rej(e.message ? e.message : e)
+        }
+    })
+}
+
+DAO.prototype.setLicensesSent = function (id, status) {
+    return new Promise (async (res, rej) => {
+        try {
+            const sqlSetLicensesSent = "UPDATE CNPJ SET LICENSES_SENT= ? WHERE ID= ?;"
+           
+            this.db.exec("BEGIN TRANSACTION;")
+            await this.execQuery(sqlSetLicensesSent, [status, id], "Falha ao atualizar alvarás enviados!")
             this.db.exec("END TRANSACTION;")
             res()
         } catch (e) {

@@ -40,6 +40,7 @@
                     <% const comment_id = results[i]?.comment_id %>
                     <% const duam_sent = results[i]?.duam_sent %>
                     <% const debits = results[i]?.debits %>
+                    <% const license_sent = results[i]?.license_sent %>
                     <% let cnpjCpfFormatted = "" %>
                     <% if(!municipioList.includes(municipio)) { %>
                         <% municipioList.push(municipio) %>
@@ -87,7 +88,9 @@
                                             </li>
                                         <% } %>
                                     <% } else { %>
-                                        <li class="no-pendencies" style="display: flex;">SEM PENDÊNCIAS</li>
+                                        <li class="no-pendencies" style="display: flex;">
+                                            <%= license_sent == 1 ? "ENVIADO" : "SEM PENDÊNCIAS" %>
+                                        </li>
                                         <% if (!statusList.includes("no-pendencies")) {statusList.push("no-pendencies")} %>
                                     <% } %>
                                 <% } %>

@@ -26,6 +26,21 @@ module.exports = function (app) {
         }
     })
 
+    app.post('/mark-license-sent', async (req, res) => {
+        const db = app.config.database.databaseConnection.db()
+        const DAO = new app.app.models.DAO(db)
+        try {
+            const { id, status } = req.query
+            if(id && status) {
+                await DAO.setLicensesSent(id, status)
+                return res.status(201).end()
+            }
+            return res.status(400).end("Parâmetros da requisição incorretos!")
+        } catch (e) {
+            res.status(400).end(e.message ? e.message : e)
+        }
+    })
+
     app.delete('/consulta-ccp', async (req, res) => {
         const db = app.config.database.databaseConnection.db()
         const DAO = new app.app.models.DAO(db)

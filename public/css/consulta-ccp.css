@@ -27,8 +27,7 @@ li {
     color: white;
     padding: 0.25em 1em;
     min-width: 15%;
-    align-self: center;
-    
+    align-self: center;  
 }
 
 .pending {
@@ -39,6 +38,9 @@ li {
 
 .no-pendencies {
     background-color: green;
+    min-width: 35%;
+    justify-content: center;
+    cursor: pointer;
 }
 
 .no-ccp {
