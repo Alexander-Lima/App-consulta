@@ -161,10 +161,10 @@ async function markLicenseSent() {
             const isSent = elementText == "ENVIADO"
            
             const config = {
-                method: "POST",
+                method: "PUT",
                 headers: { "Content-Type" : "text/html" },
             }
-            const resp = await fetch(`/consulta-ccp/set-license-sent?id=${id}&status=${isSent ? "0" : "1"}`, config)
+            const resp = await fetch(`/consulta-ccp?id=${id}&status=${isSent ? "0" : "1"}`, config)
             if(!resp.ok) {
                 return console.log(await resp.text())
             }

@@ -40,7 +40,8 @@ DAO.prototype.updateItem = function (data) {
             const sqlUpdateComments = "UPDATE COMMENTS SET COMMENT_TEXT= ? WHERE ID= ?;"
             const sqlInsertComments = "INSERT INTO COMMENTS VALUES (?, ?);"
             const sqlInsertCCP = "INSERT INTO CCP VALUES (NULL, ?, ?);"
-            const sqlCNPJ = "UPDATE CNPJ SET CNPJ= ?, NOME_EMPRESA= ?, MUNICIPIO= ?, COMMENT_ID= ? WHERE ID= ?;" 
+            const sqlCNPJ = "UPDATE CNPJ SET CNPJ= ?, NOME_EMPRESA= ?, MUNICIPIO= ?, COMMENT_ID= ?,"
+			    + "TIMESTAMP=CURRENT_TIMESTAMP WHERE ID= ?;" 
             const sqlDeleteCCP  = "DELETE FROM CCP WHERE TRACKCNPJ= ?;"
             const sqlUpdateCCP = "UPDATE CCP SET CCP_NUMBER= ? WHERE TRACKCNPJ= ? ;"
             const sqlDeleteComment= "DELETE FROM COMMENTS WHERE ID= ?;"
@@ -92,7 +93,7 @@ DAO.prototype.insertItem = function (data) {
     return new Promise(async (res, rej) => {
         try {
             const { cnpj, name, municipio, ccp, comments } = data
-            const sqlCNPJ = "INSERT INTO CNPJ VALUES (NULL, ?, ?, NULL, ?, 1, NULL);"
+            const sqlCNPJ = "INSERT INTO CNPJ VALUES (NULL, ?, ?, CURRENT_TIMESTAMP, ?, 1, NULL, 0);"
             const sqlUpdateCNPJ = "UPDATE CNPJ SET COMMENT_ID= ? WHERE ID= ?"
             const sqlComments = "INSERT INTO COMMENTS VALUES(?, ?);"
             const sqlInsertCCP = "INSERT INTO CCP VALUES (NULL, ?, ?);"
