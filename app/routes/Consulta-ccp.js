@@ -26,7 +26,7 @@ module.exports = function (app) {
         }
     })
 
-    app.post('/mark-license-sent', async (req, res) => {
+    app.post('/consulta-ccp/set-license-sent', async (req, res) => {
         const db = app.config.database.databaseConnection.db()
         const DAO = new app.app.models.DAO(db)
         try {
