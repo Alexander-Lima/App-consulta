@@ -26,10 +26,10 @@ module.exports = function() {
                         return elements.map(el => el.textContent);
                     }, searchSelector);
                 await browser.close();
-                if(resultElements.length > 0) {
-                    res(isOptante(resultElements));
+                if(resultElements.length < 0) {
+                    return res(isOptante(resultElements));
                 } else {
-                    rej();
+                    rej("No elements found.");
                 }
             })();
         })
