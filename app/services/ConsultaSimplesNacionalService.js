@@ -1,11 +1,11 @@
 module.exports = function() {
     this.isOptanteSimples = (clientCode) => {
-        return new Promise((res, rej) => {
+        return new Promise(async (res, rej) => {
             const puppeteerExtra = require('puppeteer-extra');
             const Stealth = require('puppeteer-extra-plugin-stealth');
             puppeteerExtra.use(Stealth());
             
-            (async () => {
+            try {
                 const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36';
                 const browser = await puppeteerExtra.launch({headless: "new"});
                 const page = await browser.newPage();
@@ -13,7 +13,7 @@ module.exports = function() {
                 const buttonSelector = '.btn.btn-verde.h-captcha';
                 const searchSelector = '.spanValorVerde';
                 const url = 'https://consopt.www8.receita.fazenda.gov.br/consultaoptantes/Home/ConsultarCnpj';
-
+    
                 page.setUserAgent(userAgent);
                 await page.goto(url);
                 await page.waitForSelector(formSelector);
@@ -29,9 +29,15 @@ module.exports = function() {
                 if(resultElements.length < 0) {
                     return res(isOptante(resultElements));
                 } else {
+<<<<<<< HEAD
                     rej("No elements found.");
+=======
+                    throw new Error("No elements found")
+>>>>>>> 4c963ec43e8c646aca918163dfd0eeb07de41360
                 }
-            })();
+            } catch (e) {
+                rej(e)
+            }
         })
     }
     return this; 
