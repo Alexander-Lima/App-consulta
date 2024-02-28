@@ -7,13 +7,13 @@ module.exports = function () {
     this.getTPI = (results) => {
         return new Promise (async (res, rej) => {
             const items = await getCnpjData(results)
-
-            if(!items) { rej("Falha ao buscar empresas no Sicabom"); return }
-            
+            if(!items) { 
+                return rej("Falha ao buscar empresas no Sicabom")
+            }
             const data = await getTpiData(items)
-
-            if(!data) { rej("Falha ao buscar dados no Sicabom"); return }
-
+            if(!data) { 
+                return rej("Falha ao buscar dados no Sicabom")
+            }
             res(data)
         })
 

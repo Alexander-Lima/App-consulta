@@ -4,9 +4,13 @@ module.exports = function () {
     this.getCCP = (DAO) => {
         return new Promise (async (res, rej) => {
             const results = await DAO.getAllJoinCCP().catch(err => false)
-            if(!results) { rej("Falha no Banco de Dados!"); return }
+            if(!results) { 
+                return rej("Falha no Banco de Dados!")
+            }
             const data = await getData(results)
-            if(!data) { rej("Falha na busca de CCP!"); return }
+            if(!data) { 
+                return rej("Falha na busca de CCP!")
+            }
             res(data)
         })
         
