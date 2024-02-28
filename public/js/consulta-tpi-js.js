@@ -27,10 +27,8 @@ function updateCurrentItem () {
     buttons.forEach(button => {
         button.addEventListener('click', async (event) => {
             const parent = getParent(event.target, 5)
-            const CNPJ = parent.getAttribute("id")
             const id = parent.dataset.id
-
-            const resp = await fetch(`/consulta-tpi/individual?id=${id}&cnpj=${CNPJ}`, {
+            const resp = await fetch(`/consulta-tpi/individual?id=${id}`, {
                 method: "POST",
                 headers: {"Content-Type" : "Application/json"}
             })
@@ -45,80 +43,76 @@ function updateCurrentItem () {
 
 function generateNewStatus (id, response) {
     let statusElement = document.getElementById(id)
-    let childs = generateItems(response)
+    const childs = generateDebits(response)
 
     statusElement.innerHTML = ""
     childs.forEach(child => statusElement.appendChild(child))
 }
 
-function generateItems (objArray) {
+function generateDebits (dataObject) {
     let childs = []
-
-    if (!(objArray instanceof Array)) {
-        let li = document.createElement("li")
-        let span = document.createElement("span")
-        
-        if(objArray.SEM_REGISTRO) {
+    let li = document.createElement("li")
+    let span = document.createElement("span")
+    
+    if(dataObject.sem_registro || dataObject.inconsistent || dataObject.failed) {
+        if(dataObject.sem_registro) {
             li.className = "no-register"
             span.innerHTML = "SEM REGISTRO"
-            
-        } else if (objArray.FALHOU) {
+        } else if(dataObject.inconsistent) {
+            li.className = "inconsistent"
+            span.innerHTML = "DADOS INCONSISTENTES"
+        } else if (dataObject.failed) {
             li.className = "failure"
             span.innerHTML = "FALHA AO BUSCAR DADOS"
         }
         li.style.display = "inline-flex"
         li.appendChild(span)
         childs.push(li)
-
     } else {
-        for(obj of objArray) {
-            const { 
-                SITUACAO,
-                DATA_VENCIMENTO,
-                ANO_PRESTACAO,
-                REGISTRO_CODIGO_BARRAS,
-                VALOR_TOTAL,
-                SENT
-            } = obj
-            
-            if(SENT) continue
-            let li_array = document.createElement("li")
-            let span_array = document.createElement("span")
-            const inconsistent = VALOR_TOTAL == -1
-            
-            li_array.style.display = "inline-flex"
-            if(inconsistent) {
-                span_array.innerHTML = "DADOS INCONSISTENTES"
-                li_array.classList.add("inconsistent")
-                li_array.appendChild(span_array)
-                childs.push(li_array)
-                break;
-            }
-            span_array.setAttribute("data-title", DATA_VENCIMENTO)
-            span_array.innerHTML = ANO_PRESTACAO
-            
-            if(SITUACAO === "PAGO" || SITUACAO === "ISENTO") {
-                span_array.setAttribute("data-barcode", REGISTRO_CODIGO_BARRAS)
-                li_array.className = SITUACAO === "PAGO" ? "pago" : "ISENTO"    
-            } else if(SITUACAO) {
-                const sentYearsObj = objArray.filter(item => item.SENT)
-                const sentYearsArray = sentYearsObj[0] ? sentYearsObj[0].SENT : false
-                const isSentYear = sentYearsArray ? sentYearsArray.includes(ANO_PRESTACAO)  : false
-                const itemDateArray = DATA_VENCIMENTO.split("/");
-                const formatedDate = itemDateArray[2] + "-" + itemDateArray[1] + "-" + itemDateArray[0];
-                const milisecondsDay = 2592000000
-                const itemDate = new Date(formatedDate + "T00:00:00.000Z");
-                const today = new Date().getTime()
-                
-                if (itemDate - today < 0) {li_array.className = isSentYear ? "vencido sent" : "vencido"}
-                else if (itemDate - today < milisecondsDay) {li_array.className = isSentYear ? "vencer-mes sent" : "vencer-mes"}
-                else {li_array.className = isSentYear ? "vencer-futuro sent" : "vencer-futuro"} 
-            }
-            li_array.appendChild(span_array)
-            childs.push(li_array)
+        for(debit of dataObject.debits) {
+            const debitListItem = generateDebitElements(debit, dataObject.sent)
+            childs.push(debitListItem)
         }
     }
     return childs
+}
+
+function generateDebitElements(debit, sent) {
+    const { 
+        ano_prestacao,
+        codigo_barras,
+        data_vencimento,
+        situacao,
+    } = debit
+    let debitListItem = document.createElement("li")
+    let debitSpan = document.createElement("span")
+    debitListItem.appendChild(debitSpan)
+
+    debitListItem.style.display = "inline-flex"
+    debitSpan.setAttribute("data-title", data_vencimento)
+    debitSpan.innerHTML = ano_prestacao
+    
+    if(situacao == "PAGO" || situacao == "ISENTO") {
+        debitSpan.setAttribute("data-barcode", codigo_barras)
+        debitListItem.className = situacao === "PAGO" ? "pago" : "isento"    
+    } else if(situacao) {
+        const isSentYear = sent.includes(ano_prestacao)
+        const itemDateArray = data_vencimento.split("/");
+        const formatedDate = itemDateArray[2] + "-" + itemDateArray[1] + "-" + itemDateArray[0];
+        const milisecondsMonth = 2592000000
+        const itemDate = new Date(formatedDate + "T00:00:00.000Z");
+        const today = new Date().getTime()
+        
+        if (itemDate - today < 0) {
+            debitListItem.className = "vencido"
+        } else if (itemDate - today < milisecondsMonth) {
+            debitListItem.className = "vencer-mes"
+        } else {
+            debitListItem.className = "vencer-futuro"
+        }
+        isSentYear ? debitListItem.classList.add("sent") : false
+    }
+    return debitListItem
 }
 
 function addArrowClick () {

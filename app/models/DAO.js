@@ -19,16 +19,12 @@ DAO.prototype.getAllJoinTPI = function () {
         return this.execQueryWithResults(sql);
 }
 
-DAO.prototype.getSentYearsTPI = function (id) {
-    return new Promise((res, rej) => {
-        let sql = `SELECT GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS_TPI WHERE TRACKCNPJ= ?;`
-
-        this.db.all(sql, [id], (err, result) => {
-            if(err) { rej(err); return }
-            [{ SENT }] = result
-            res(SENT ? {SENT : SENT.split(";")} : [])
-        })
-    })
+DAO.prototype.getCnpjJoinTPI = function (id) {
+    const sql = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.MUNICIPIO, CNPJ.COMMENT_ID,"
+    + "COMMENTS.COMMENT_TEXT, YEARS.SENT FROM (SELECT * FROM CNPJ WHERE ID=?) AS CNPJ LEFT "
+    + "JOIN (SELECT TRACKCNPJ, GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS_TPI GROUP BY (TRACKCNPJ)) "
+    + "AS YEARS ON CNPJ.ID=YEARS.TRACKCNPJ LEFT JOIN COMMENTS ON COMMENTS.ID=CNPJ.COMMENT_ID ORDER BY CNPJ.NOME_EMPRESA";
+    return this.execQueryWithResults(sql, [id]);
 }
 
 DAO.prototype.updateItem = function (data) {

@@ -11,7 +11,7 @@ module.exports = function (app) {
             const cnpjList = await DAO.getAllJoinTPI()
             const data = await Service.getTPI(cnpjList)
             res.setHeader("Access-Control-Allow-Origin", "*")
-            res.render("./consulta-tpi", { cnpjs: data, today: todayDate} )
+            res.render("./consulta-tpi", { cnpjs: data, today: todayDate })
             res.status(200).end()
         } catch (e) {
             res.status(400).end(e.message ? e.message : e)
@@ -21,11 +21,11 @@ module.exports = function (app) {
     app.post('/consulta-tpi/individual', async (req, res) => {
         const db = app.config.database.databaseConnection.db()
         const DAO = new app.app.models.DAO(db)
-        const Service = app.app.services.ConsultaTPIindividualService
+        const Service = app.app.services.ConsultaTPIService
          try {
-            const { id, cnpj } = req.query
-            const yearsSent = await DAO.getSentYearsTPI(id)
-            const data = await Service.updateItem(cnpj, yearsSent)
+            const { id } = req.query
+            const cnpj = await DAO.getCnpjJoinTPI(id)
+            const [data] = await Service.getTPI(cnpj)
             res.status(200).send(data).end()
          } catch (e) {
             res.status(400).end(e.message ? e.message : e)
