@@ -1,3 +1,4 @@
+
 module.exports = function (app) {
     app.get("/login", (req, res) => {
         res.status(200).render("login")
@@ -6,11 +7,12 @@ module.exports = function (app) {
     app.post("/login", async (req, res) => {
         const db = app.config.database.databaseConnection.db()
         const DAO = new app.app.models.DAO(db)
+        const Service = app.app.services.AuthenticationService
         const { user, pass } = req.body
         try {
-            const userAuthenticated = await DAO.authenticate(user, pass)
-            if (userAuthenticated) {
-                req.session.userId = userAuthenticated.NAME
+            const authenticationResult = await Service.authenticate(DAO, user, pass)
+            if (authenticationResult) {
+                req.session.userId = user
                 res.status(200).redirect("/cnpjs-crud")
             } else res.status(400).render("login-erro")
         } catch (e){
