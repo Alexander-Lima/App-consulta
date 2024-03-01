@@ -4,10 +4,10 @@ module.exports = function() {
             const puppeteerExtra = require('puppeteer-extra');
             const Stealth = require('puppeteer-extra-plugin-stealth');
             puppeteerExtra.use(Stealth());
+            const browser = await puppeteerExtra.launch({ headless: "new" });
             
             try {
                 const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36';
-                const browser = await puppeteerExtra.launch({headless: "new"});
                 const page = await browser.newPage();
                 const formSelector = '.form-control.numeric';
                 const buttonSelector = '.btn.btn-verde.h-captcha';
@@ -25,7 +25,6 @@ module.exports = function() {
                         const elements = Array.from(document.querySelectorAll(searchSelector));
                         return elements.map(el => el.textContent);
                     }, searchSelector);
-                await browser.close();
                 if(resultElements.length > 0) {
                     res(isOptante(resultElements));
                 } else {
@@ -33,6 +32,10 @@ module.exports = function() {
                 }
             } catch (e) {
                 rej(e)
+            } finally {
+                if(browser) {
+                    browser.close();
+                }
             }
         })
     }
