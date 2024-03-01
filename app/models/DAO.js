@@ -22,12 +22,13 @@ module.exports = function () {
             return (await this.dbClient.query(query)).rows
     }
     
-    DAO.prototype.getCnpjJoinTPI = function (id) {
-        const query = "SELECT CNPJ.ID, CNPJ.STATUS, CNPJ.CNPJ, CNPJ.NOME_EMPRESA, CNPJ.MUNICIPIO, CNPJ.COMMENT_ID,"
-        + "COMMENTS.COMMENT_TEXT, YEARS.SENT FROM (SELECT * FROM CNPJ WHERE ID=?) AS CNPJ LEFT "
-        + "JOIN (SELECT TRACKCNPJ, GROUP_CONCAT(YEAR, ';') AS SENT FROM YEARS_TPI GROUP BY (TRACKCNPJ)) "
-        + "AS YEARS ON CNPJ.ID=YEARS.TRACKCNPJ LEFT JOIN COMMENTS ON COMMENTS.ID=CNPJ.COMMENT_ID ORDER BY CNPJ.NOME_EMPRESA";
-        return this.execQueryWithResults(sql, [id]);
+    DAO.prototype.getCnpjJoinTPI = async function (id) {
+        const query = "SELECT cnpj.id, cnpj.status, cnpj.cnpj, cnpj.nome_empresa, cnpj.municipio, cnpj.comment_id,"
+            + "comments.comment_text, years.sent from (SELECT * FROM appconsulta.cnpj WHERE id=$1) as cnpj LEFT OUTER JOIN "
+            + "(SELECT trackcnpj,  array_agg(year) as sent from appconsulta.years_tpi group by trackcnpj) as years "
+            + "on cnpj.id=years.trackcnpj LEFT JOIN appconsulta.comments as comments on comments.id=cnpj.comment_id "
+            + "order by cnpj.nome_empresa;"
+        return (await this.dbClient.query(query, [id])).rows
     }
     
     DAO.prototype.updateItem = function (data) {
