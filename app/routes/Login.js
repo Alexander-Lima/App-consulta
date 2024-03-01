@@ -16,7 +16,7 @@ module.exports = function (app) {
                 res.status(200).redirect("/cnpjs-crud")
             } else res.status(400).render("login-erro")
         } catch (e){
-            res.end(e.message ? e.message : e)
+            res.status(400).end(JSON.stringify({error: e?.message ? e.message : "unknown"}))
         }
     })
 

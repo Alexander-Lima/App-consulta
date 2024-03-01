@@ -1,12 +1,18 @@
-const sqlite = require('sqlite3').verbose();
-const PRODUCTION = true;
+const { Client } = require('pg');
 
 module.exports = function () {
-    this.db = function () {
-        const dbPath = 
-            PRODUCTION ? "\\\\192.168.1.202\\dados novo servidor\\01 Geral\\28 App Consulta DB\\Main.db":
-                         "C:\\Users\\Controller\\Desktop\\Consulta\\App-consulta\\Main.db"
-        return new sqlite.Database(dbPath)
+    this.openClient = async function () {
+        const client = new Client({
+            user: 'postgres',
+            host: '192.168.1.203',
+            database: 'postgres',
+            password: '172125',
+            port: '5432'
+        })
+        await client.connect()
+        return client
     }
     return this
 }
+
+

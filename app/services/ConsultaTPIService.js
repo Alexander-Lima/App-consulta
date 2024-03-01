@@ -6,40 +6,40 @@ const error_FALHA = false
 module.exports = function () {
     this.getTPI = (results) => {
         return new Promise (async (res, rej) => {
-            const items = await getCnpjData(results)
+            const items = await getcnpjData(results)
             if(!items) { 
                 return rej("Falha ao buscar empresas no Sicabom")
             }
-            const data = await getTpiData(items)
+            const data = await getTpidata(items)
             if(!data) { 
                 return rej("Falha ao buscar dados no Sicabom")
             }
             res(data)
         })
 
-        async function getCnpjData (rows) {
+        async function getcnpjData (rows) {
             let results = []
         
             for (row of rows) {
                 const {
-                    ID,
-                    NOME_EMPRESA,
-                    MUNICIPIO,
-                    SENT,
-                    COMMENT_ID,
-                    COMMENT_TEXT,
-                    CNPJ,
-                    STATUS
+                    id,
+                    nome_empresa,
+                    municipio,
+                    sent,
+                    comment_id,
+                    comment_text,
+                    cnpj,
+                    status
                 } = row
-                if(STATUS === 0) continue
+                if(status === 0) continue
                 let cnpjData = {
-                    id: ID,
-                    cpf_cnpj: CNPJ,
-                    nome_empresa: NOME_EMPRESA,
-                    municipio: MUNICIPIO,
-                    sent: SENT ? SENT.split(";") : [],
-                    comment_id: COMMENT_ID,
-                    comment_text: COMMENT_TEXT,
+                    id: id,
+                    cpf_cnpj: cnpj,
+                    nome_empresa: nome_empresa,
+                    municipio: municipio,
+                    sent: sent,
+                    comment_id: comment_id,
+                    comment_text: comment_text,
                     sem_registro: true,
                     inconsistent: false,
                     failed: true,
@@ -52,7 +52,7 @@ module.exports = function () {
                 const form = new formData()
                 let resp = false
                 form.append("acao", "buscar_logradouros")
-                form.append("cnpj", `${row.CNPJ}`)
+                form.append("cnpj", cnpj)
                 if(!error_SEM_REGISTRO) {
                     resp = await axios.post(
                         "https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
@@ -71,7 +71,7 @@ module.exports = function () {
             return results;   
         }
         
-        async function getTpiData (items) {
+        async function getTpidata (items) {
             let results = []
             for (item of items) {
                 const {
@@ -82,18 +82,24 @@ module.exports = function () {
                     sp_id,
                     sem_registro
                 } = item
-                if(sem_registro) { results.push(item); continue}    
+                if(sem_registro) {
+                    results.push(item)
+                    continue
+                }    
                 const form = new formData()
                 form.append("acao", "buscar_tpi")
-                form.append("data[CPF_CNPJ]", `${cpf_cnpj}`)
-                form.append("data[C_ID]", `${c_id}`)
-                form.append("data[ANO_ATUAL]", `${ano_atual}`)
-                form.append("data[ANO_INICIO_TPI]", `${ano_inicio_tpi}`)
-                form.append("data[SP_ID]", `${sp_id}`)
+                form.append("data[CPF_cnpj]", cpf_cnpj)
+                form.append("data[C_ID]", c_id)
+                form.append("data[ANO_ATUAL]", ano_atual)
+                form.append("data[ANO_INICIO_TPI]", ano_inicio_tpi)
+                form.append("data[SP_ID]", sp_id)
                 let resp = false
                 if(!error_FALHA) {
                     resp = await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
-                    .catch(err => false)
+                    .catch(err => {
+                        console.log(err)
+                        return false
+                    })
                 }
                 if(resp.data) {
                     let debitObjects = []
