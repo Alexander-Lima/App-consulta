@@ -77,19 +77,9 @@ module.exports = function () {
         await this.dbClient.query("END;")
     }
     
-    DAO.prototype.setLicensesSent = function (id, status) {
-        return new Promise (async (res, rej) => {
-            try {
-                const querySetLicensesSent = "UPDATE CNPJ SET LICENSES_SENT= $1 WHERE ID= $2;"
-               
-                this.dbClient.exec("BEGIN TRANSACTION;")
-                await this.execQuery(sqlSetLicensesSent, [status, id], "Falha ao atualizar alvarás enviados!")
-                this.dbClient.exec("END TRANSACTION;")
-                res()
-            } catch (e) {
-                rej(e.message ? e.message : e)
-            }
-        })
+    DAO.prototype.setLicensesSent = async function (id, licenseSent) {
+        const querySetLicensesSent = "UPDATE appconsulta.cnpj SET licenses_sent= $2 WHERE ID= $1;"
+        await this.dbClient.query(querySetLicensesSent, [id, licenseSent])
     }
     
     DAO.prototype.insertItem = function (data) {

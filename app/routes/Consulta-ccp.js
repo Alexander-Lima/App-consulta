@@ -2,12 +2,11 @@ const axios = require('axios').default
 
 module.exports = function (app) {
     app.get('/consulta-ccp', async (req, res) => {
-        const db = app.config.database.databaseConnection.db()
-        const DAO = new app.app.models.DAO(db)
+        const dbClient = await app.config.database.databaseConnection.openClient()
+        const DAO = new app.app.models.DAO(dbClient)
         const getCCP = app.app.services.ConsultaCCPService.getCCP
         try {
             const data = await getCCP(DAO)
-            res.setHeader("Access-Control-Allow-Origin", "*")
             res.render('consulta-ccp', { results : data })
             res.status(200).end()
         } catch (e) {
@@ -16,8 +15,8 @@ module.exports = function (app) {
     })
 
     app.post('/consulta-ccp', async (req, res) => {
-        const db = app.config.database.databaseConnection.db()
-        const DAO = new app.app.models.DAO(db)
+        const dbClient = await app.config.database.databaseConnection.openClient()
+        const DAO = new app.app.models.DAO(dbClient)
         try {
             await DAO.insertSentDuam(req.body)
             res.status(201).end()
@@ -27,12 +26,12 @@ module.exports = function (app) {
     })
 
     app.put('/consulta-ccp', async (req, res) => {
-        const db = app.config.database.databaseConnection.db()
-        const DAO = new app.app.models.DAO(db)
+        const dbClient = await app.config.database.databaseConnection.openClient()
+        const DAO = new app.app.models.DAO(dbClient)
         try {
-            const { id, status } = req.query
-            if(id && status) {
-                await DAO.setLicensesSent(id, status)
+            const { id, licenseSent } = req.query
+            if(id && licenseSent) {
+                await DAO.setLicensesSent(id, licenseSent)
                 return res.status(200).end()
             }
             return res.status(400).end("Parâmetros da requisição incorretos!")
@@ -42,8 +41,8 @@ module.exports = function (app) {
     })
 
     app.delete('/consulta-ccp', async (req, res) => {
-        const db = app.config.database.databaseConnection.db()
-        const DAO = new app.app.models.DAO(db)
+        const dbClient = await app.config.database.databaseConnection.openClient()
+        const DAO = new app.app.models.DAO(dbClient)
         try {
             await DAO.deleteSentDuam(req.body)
             res.status(200).end()
