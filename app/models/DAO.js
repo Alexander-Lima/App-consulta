@@ -1,6 +1,5 @@
 const util = require('../utilities/util').util
 
-
 module.exports = function () {
     class DAO {
         constructor (dbClient) { this.dbClient = dbClient }
@@ -31,47 +30,51 @@ module.exports = function () {
         return (await this.dbClient.query(query, [id])).rows
     }
     
-    DAO.prototype.updateItem = function (data) {
-        return new Promise (async (res, rej) => {
-            try {
-                const { cnpjId, cnpj, ccp, name, municipio, comments } = data
-                const queryFindComment = "SELECT * FROM COMMENTS WHERE ID= $1;"
-                const queryFindCCP = "SELECT * FROM CCP WHERE TRACKCNPJ= $1;"
-                const queryUpdateComments = "UPDATE COMMENTS SET COMMENT_TEXT= ? WHERE ID= $1;"
-                const queryInsertComments = "INSERT INTO COMMENTS VALUES ($1, $2);"
-                const queryInsertCCP = "INSERT INTO CCP VALUES (NULL, $1, $2);"
-                const queryCNPJ = "UPDATE CNPJ SET CNPJ= $1, NOME_EMPRESA= $2, MUNICIPIO= $3, COMMENT_ID= $4,"
-                    + "TIMESTAMP=datetime(CURRENT_TIMESTAMP, 'localtime') WHERE ID= $1;" 
-                const queryDeleteCCP  = "DELETE FROM CCP WHERE TRACKCNPJ= $1;"
-                const queryUpdateCCP = "UPDATE CCP SET CCP_NUMBER= $1 WHERE TRACKCNPJ= $2;"
-                const queryDeleteComment= "DELETE FROM COMMENTS WHERE ID= $1;"
-                const queryCNPJParams = [
-                    util.sanitizeCNPJ(cnpj),
-                    util.normalizeName(name),
-                    util.normalizeName(municipio),
-                    comments ? cnpjId : null,
-                    cnpjId
-                ] 
-                this.dbClient.exec("BEGIN TRANSACTION;")
-                if(comments){
-                    const commentExists = await this.findOne(sqlFindComment, [cnpjId])
-                    if(commentExists) await this.execQuery(sqlUpdateComments, [comments, cnpjId], "Falha ao atualizar comentários!")
-                    else await this.execQuery(sqlInsertComments, [cnpjId, comments], "Falha ao inserir comentários!")
-                } else this.execQuery(sqlDeleteComment, [cnpjId], "Falha ao deletar comentários!")
-            
-                if(ccp) {
-                    const ccpExists = await this.findOne(sqlFindCCP, [cnpjId])
-                    if(ccpExists) await this.execQuery(sqlUpdateCCP, [ccp, cnpjId], "Falha ao atualizar CCP!")
-                    else this.execQuery(sqlInsertCCP, [ccp, cnpjId], "Falha ao inserir CCP!")
-                } else await this.execQuery(sqlDeleteCCP, [cnpjId], "Falha ao deletar CCP!")
-                
-                await this.execQuery(sqlCNPJ, sqlCNPJParams, "Falha ao atualizar CNPJ!")
-                this.dbClient.exec("END TRANSACTION;")
-                res()
-            } catch (e) {
-                rej(e.message ? e.message : e)
+    DAO.prototype.updateItem = async function (data) {
+        const { cnpjId, cnpj, ccp, name, municipio, comments } = data
+        const queryFindComment = "SELECT * FROM appconsulta.comments WHERE id= $1;"
+        const queryUpdateComments = "UPDATE appconsulta.comments SET comment_text= $2 WHERE id= $1;"
+        const queryInsertComments = "INSERT INTO appconsulta.comments VALUES ($1, $2);"
+        const queryDeleteComment= "DELETE FROM appconsulta.comments WHERE id= $1;"
+        const queryDeleteCommentCnpj= "UPDATE appconsulta.cnpj SET comment_id=NULL WHERE id= $1;"
+        const queryFindCCP = "SELECT * FROM appconsulta.ccp WHERE trackcnpj= $1;"
+        const queryUpdateCCP = "UPDATE appconsulta.ccp SET ccp_number= $2 WHERE TRACKCNPJ= $1;"
+        const queryInsertCCP = "INSERT INTO appconsulta.ccp VALUES (DEFAULT, $1, $2);"
+        const queryDeleteCCP  = "DELETE FROM appconsulta.ccp WHERE TRACKCNPJ= $1;"
+        const queryUpdateCNPJ = "UPDATE appconsulta.cnpj SET cnpj= $1, nome_empresa= $2, municipio= $3, comment_id= $4,"
+            + "last_update=CURRENT_TIMESTAMP WHERE ID= $5;" 
+        const queryCNPJParams = [
+            util.sanitizeCNPJ(cnpj),
+            util.normalizeName(name),
+            util.normalizeName(municipio),
+            comments ? cnpjId : null,
+            cnpjId
+        ]
+        await this.dbClient.query("BEGIN;")
+        if(comments){
+            const commentExists = (await this.dbClient.query(queryFindComment, [cnpjId])).rows.length > 0
+            if(commentExists) {
+                await this.dbClient.query(queryUpdateComments, [cnpjId, comments])
+            } else {
+                await this.dbClient.query(queryInsertComments, [cnpjId, comments])
             }
-        })
+        } else {
+            await this.dbClient.query(queryDeleteCommentCnpj, [cnpjId])
+            await this.dbClient.query(queryDeleteComment, [cnpjId])
+        }
+        
+        if(ccp) {
+            const ccpExists = (await this.dbClient.query(queryFindCCP, [cnpjId])).rows.length > 0
+            if(ccpExists) {
+                await this.dbClient.query(queryUpdateCCP, [cnpjId, ccp])
+            } else {
+                await this.dbClient.query(queryInsertCCP, [ccp, cnpjId])
+            }
+        } else {
+            await this.dbClient.query(queryDeleteCCP, [cnpjId])
+        }
+        await this.dbClient.query(queryUpdateCNPJ, queryCNPJParams)
+        await this.dbClient.query("END;")
     }
     
     DAO.prototype.setLicensesSent = function (id, status) {
@@ -205,50 +208,6 @@ module.exports = function () {
             } catch (err) {
                 rej(err.message)
             }
-        })
-    }
-    DAO.prototype.execQuery = function(sql, params, message) {
-        return new Promise((res, rej) => {
-            this.dbClient.query(sql, params, (err, result) => {
-                console.log(err)
-                console.log(result)
-                res()
-            }) 
-        })
-    }
-    
-    // DAO.prototype.execQueryWithResults = async function(sql, params, message) {
-    //     try {
-    //             const result = 
-    //             console.log()
-    //             // res()
-            
-    //     } catch (e) {
-    //         // rej()
-    //         console.log(e)
-    //     } finally {
-    //         this.dbClient.end()
-    //     }
-        // return new Promise(async (res, rej) => {
-        // })
-    // }
-    
-    DAO.prototype.findOne = function(sql, params, message) {
-        return new Promise((res, rej) => {
-            this.dbClient.get(sql, params, (error, row) => {
-                if(error) { rej(message ? message : error); return }
-                if(row === undefined) { res(false); return }
-                res(row)
-            }) 
-        })
-    }
-    
-    DAO.prototype.insertReturningId = function(sql, params, message) {
-        return new Promise((res, rej) => {
-            this.dbClient.run(sql, params, function (error) {
-                if(error) rej(message ? message : error)
-                res(this.lastID)
-            })
         })
     }
     return DAO

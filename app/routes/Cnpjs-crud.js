@@ -13,7 +13,7 @@ module.exports = function (app) {
     })
 
     app.put('/cnpjs-crud', async (req, res) => {
-        const dbClient = app.config.database.databaseConnection.openClient()
+        const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
             await DAO.updateItem(req.body)
@@ -24,7 +24,7 @@ module.exports = function (app) {
     })
     
     app.put('/cnpjs-crud/toggle-status/', async (req, res) => {
-        const dbClient = app.config.database.databaseConnection.openClient()
+        const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
             await DAO.toggleStatus(req.body)
@@ -35,7 +35,7 @@ module.exports = function (app) {
     })
 
     app.post('/cnpjs-crud', async (req, res) => {
-        const dbClient = app.config.database.databaseConnection.openClient()
+        const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
             await DAO.insertItem(req.body)
@@ -46,7 +46,7 @@ module.exports = function (app) {
     })
 
     app.delete('/cnpjs-crud', async (req, res) => {
-        const dbClient = app.config.database.databaseConnection.openClient()
+        const dbClient = await pp.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
             await DAO.deleteItems(req.body)
