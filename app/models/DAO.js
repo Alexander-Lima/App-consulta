@@ -121,25 +121,18 @@ module.exports = function () {
         await this.dbClient.query("END;")
     }
     
-    DAO.prototype.deleteItems = function (data) {
-        return new Promise(async (res, rej) => {
-            try {
-                const cnpjList = data
-                const placeholders = data.map((curElement, index) => `$${ index + 1}`).join(",");
-                const queryCNPJ = `DELETE FROM CNPJ WHERE ID IN (${placeholders});`
-                const queryCCP = `DELETE FROM CCP WHERE TRACKCNPJ IN (${placeholders});`
-                const queryComments = `DELETE FROM COMMENTS WHERE ID IN (${placeholders});`
-    
-                this.dbClient.exec("BEGIN TRANSACTION;")
-                await this.execQuery(sqlCNPJ, cnpjList, "Falha ao deletar CNPJ!")
-                await this.execQuery(sqlCCP, cnpjList, "Falha ao deletar CCP!")
-                await this.execQuery(sqlComments, cnpjList, "Falha ao deletar comentários!")
-                this.dbClient.exec("END TRANSACTION;")
-                res()
-            } catch (e) {
-                rej(e.message ? e.message : e)
-            }
-        })
+    DAO.prototype.deleteItems = async function (data) {
+        const cnpjList = data
+        const placeholders = data.map((curElement, index) => `$${ index + 1}`).join(",")
+        const queryDeleteCcpList = `DELETE FROM appconsulta.ccp WHERE trackcnpj IN (${placeholders});`
+        const queryDeleteListCnpj = `DELETE FROM appconsulta.cnpj WHERE id IN (${placeholders});`
+        const queryDeleteCommentsList = `DELETE FROM appconsulta.comments WHERE id IN (${placeholders});`
+
+        await this.dbClient.query("BEGIN;")
+        await this.dbClient.query(queryDeleteCcpList, cnpjList)
+        await this.dbClient.query(queryDeleteListCnpj, cnpjList)
+        await this.dbClient.query(queryDeleteCommentsList, cnpjList)
+        await this.dbClient.query("END;")
     }
     
     DAO.prototype.insertSentYearTPI = function (data) {

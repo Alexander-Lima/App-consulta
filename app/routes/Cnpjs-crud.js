@@ -46,7 +46,7 @@ module.exports = function (app) {
     })
 
     app.delete('/cnpjs-crud', async (req, res) => {
-        const dbClient = await pp.config.database.databaseConnection.openClient()
+        const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
             await DAO.deleteItems(req.body)
