@@ -32,17 +32,11 @@ module.exports = function () {
     
     DAO.prototype.updateItem = async function (data) {
         const { cnpjId, cnpj, ccp, name, municipio, comments } = data
-        const queryFindComment = "SELECT * FROM appconsulta.comments WHERE id= $1;"
-        const queryUpdateComments = "UPDATE appconsulta.comments SET comment_text= $2 WHERE id= $1;"
-        const queryInsertComments = "INSERT INTO appconsulta.comments VALUES ($1, $2);"
         const queryDeleteComment= "DELETE FROM appconsulta.comments WHERE id= $1;"
         const queryDeleteCommentCnpj= "UPDATE appconsulta.cnpj SET comment_id=NULL WHERE id= $1;"
-        const queryFindCCP = "SELECT * FROM appconsulta.ccp WHERE trackcnpj= $1;"
-        const queryUpdateCCP = "UPDATE appconsulta.ccp SET ccp_number= $2 WHERE TRACKCNPJ= $1;"
-        const queryInsertCCP = "INSERT INTO appconsulta.ccp VALUES (DEFAULT, $1, $2);"
         const queryDeleteCCP  = "DELETE FROM appconsulta.ccp WHERE TRACKCNPJ= $1;"
         const queryUpdateCNPJ = "UPDATE appconsulta.cnpj SET cnpj= $1, nome_empresa= $2, municipio= $3, comment_id= $4,"
-            + "last_update=CURRENT_TIMESTAMP WHERE ID= $5;" 
+        + "last_update=CURRENT_TIMESTAMP WHERE ID= $5;" 
         const queryCNPJParams = [
             util.sanitizeCNPJ(cnpj),
             util.normalizeName(name),
@@ -52,24 +46,14 @@ module.exports = function () {
         ]
         await this.dbClient.query("BEGIN;")
         if(comments){
-            const commentExists = (await this.dbClient.query(queryFindComment, [cnpjId])).rows.length > 0
-            if(commentExists) {
-                await this.dbClient.query(queryUpdateComments, [cnpjId, comments])
-            } else {
-                await this.dbClient.query(queryInsertComments, [cnpjId, comments])
-            }
+            await this.updateOrInsertComments(cnpjId, comments)
         } else {
             await this.dbClient.query(queryDeleteCommentCnpj, [cnpjId])
             await this.dbClient.query(queryDeleteComment, [cnpjId])
         }
         
         if(ccp) {
-            const ccpExists = (await this.dbClient.query(queryFindCCP, [cnpjId])).rows.length > 0
-            if(ccpExists) {
-                await this.dbClient.query(queryUpdateCCP, [cnpjId, ccp])
-            } else {
-                await this.dbClient.query(queryInsertCCP, [ccp, cnpjId])
-            }
+            await this.updateOrInsertccp(cnpjId, ccp)
         } else {
             await this.dbClient.query(queryDeleteCCP, [cnpjId])
         }
@@ -77,38 +61,64 @@ module.exports = function () {
         await this.dbClient.query("END;")
     }
     
+    DAO.prototype.updateOrInsertComments = async function(cnpjId, comments) {
+        const queryFindComment = "SELECT * FROM appconsulta.comments WHERE id= $1;"
+        const queryUpdateComments = "UPDATE appconsulta.comments SET comment_text= $2 WHERE id= $1;"
+        const queryInsertComments = "INSERT INTO appconsulta.comments VALUES ($1, $2);"
+        const queryUpdateCommentCnpj = "UPDATE appconsulta.cnpj SET comment_id= $1 WHERE id= $1;"
+        const commentExists = (await this.dbClient.query(queryFindComment, [cnpjId])).rows.length > 0
+
+        if(commentExists) {
+            await this.dbClient.query(queryUpdateComments, [cnpjId, comments])
+        } else {
+            await this.dbClient.query(queryInsertComments, [cnpjId, comments])
+            await this.dbClient.query(queryUpdateCommentCnpj, [cnpjId])
+        }
+    }
+
+    DAO.prototype.updateOrInsertccp = async function(cnpjId, ccp) {
+        const queryFindCCP = "SELECT * FROM appconsulta.ccp WHERE trackcnpj= $1;"
+        const queryUpdateCCP = "UPDATE appconsulta.ccp SET ccp_number= $2 WHERE TRACKCNPJ= $1;"
+        const queryInsertCCP = "INSERT INTO appconsulta.ccp VALUES (DEFAULT, $1, $2);"
+        const ccpExists = (await this.dbClient.query(queryFindCCP, [cnpjId])).rows.length > 0
+
+        if(ccpExists) {
+            await this.dbClient.query(queryUpdateCCP, [cnpjId, ccp])
+        } else {
+            await this.dbClient.query(queryInsertCCP, [ccp, cnpjId])
+        }
+    }
+
+    DAO.prototype.findCnpjId = async function(cnpj) {
+        return (await this.dbClient.query("SELECT id FROM appconsulta.cnpj WHERE cnpj=$1", [cnpj])).rows
+    }
+    
     DAO.prototype.setLicensesSent = async function (id, licenseSent) {
         const querySetLicensesSent = "UPDATE appconsulta.cnpj SET licenses_sent= $2 WHERE ID= $1;"
         await this.dbClient.query(querySetLicensesSent, [id, licenseSent])
     }
     
-    DAO.prototype.insertItem = function (data) {
-        return new Promise(async (res, rej) => {
-            try {
-                const { cnpj, name, municipio, ccp, comments } = data
-                const queryCNPJ = "INSERT INTO CNPJ VALUES (default, $1, $2, datetime(CURRENT_TIMESTAMP, 'localtime'), "
-                                + "$3, 1, default, 0);"
-                const queryUpdateCNPJ = "UPDATE CNPJ SET COMMENT_ID= $1 WHERE ID= $2"
-                const queryComments = "INSERT INTO COMMENTS VALUES($1, $2);"
-                const queryInsertCCP = "INSERT INTO CCP VALUES (default, $1, $2);"
-                const queryCNPJParams = [
-                    util.sanitizeCNPJ(cnpj),
-                    util.normalizeName(name),
-                    util.normalizeName(municipio),
-                ]
-                this.dbClient.exec("BEGIN TRANSACTION;")
-                const id = await this.insertReturningId(sqlCNPJ, sqlCNPJParams, "Falha ao inserir CNPJ!")
-                if(comments) {
-                    await this.execQuery(sqlUpdateCNPJ, [id, id], "Falha ao atualizar CNPJ!")
-                    await this.execQuery(sqlComments, [id, comments], "Falha ao inserir comentário!")
-                }
-                if(ccp) await this.execQuery(sqlInsertCCP, [ccp, id])
-                this.dbClient.exec("END TRANSACTION;")
-                res()
-            } catch (e) {
-                rej(e.message ? e.message : e)
+    DAO.prototype.insertItem = async function (data) {
+        const { cnpj, name, municipio, ccp, comments } = data
+        const queryInsertCnpj = "INSERT INTO appconsulta.cnpj VALUES (DEFAULT, $1, $2, DEFAULT, $3, DEFAULT, NULL, DEFAULT);"
+        const queryInsertCnpjarams = [
+            util.sanitizeCNPJ(cnpj),
+            util.normalizeName(name),
+            util.normalizeName(municipio),
+        ]
+        await this.dbClient.query("BEGIN;")
+        await this.dbClient.query(queryInsertCnpj, queryInsertCnpjarams)
+
+        if(ccp || comments) {
+            const id = (await this.findCnpjId(util.sanitizeCNPJ(cnpj)))[0]?.id
+            if(comments) {
+                await this.updateOrInsertComments(id, comments)
             }
-        })
+            if(ccp) {
+                await this.updateOrInsertccp(id, ccp)
+            }
+        }
+        await this.dbClient.query("END;")
     }
     
     DAO.prototype.deleteItems = function (data) {
