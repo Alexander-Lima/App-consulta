@@ -109,17 +109,12 @@
                                 <% } else { %>
                                     <% const itemDateArray = data_vencimento.split("/") %>
                                     <% const itemDate = new Date(itemDateArray[2], itemDateArray[1] - 1, itemDateArray[0]) %>
-                                    <% const date = new Date() %>
-                                    <% const currentDay = date.getDate() %>
-                                    <% const currentMonth = date.getMonth() %>
-                                    <% const currentYear = date.getFullYear() %>
-                                    <% const today = new Date(currentYear, currentMonth, currentDay) %>
-                                    <% const lastDayMonth = new Date(currentYear, currentMonth + 1, 0) %>
+                                    <% const lastDayMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0) %>
                                     <% const expire = itemDate - today < 0 ? "vencido" : lastDayMonth - itemDate >= 0 ? "vencer-mes" : "vencer-futuro" %>
                                     <% const status = expire == "vencido" ? "VENCIDOS" : expire == "vencer-mes" ? "VENCENDO NESTE MÊS" : "VENCIMENTO FUTURO" %>
                                     <li 
                                         style="display: inline-flex;"
-                                        class='<%= yearsSent && yearsSent.includes(ano_prestacao) ? expire + " sent" : expire %>'>
+                                        class='<%= yearsSent && yearsSent.includes(parseInt(ano_prestacao)) ? expire + " sent" : expire %>'>
                                         <span 
                                         data-title=<%= data_vencimento %>>
                                             <%= ano_prestacao %>

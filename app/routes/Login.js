@@ -5,8 +5,8 @@ module.exports = function (app) {
     })
 
     app.post("/login", async (req, res) => {
-        const db = app.config.database.databaseConnection.db()
-        const DAO = new app.app.models.DAO(db)
+        const dbClient = await app.config.database.databaseConnection.openClient()
+        const DAO = new app.app.models.DAO(dbClient)
         const Service = app.app.services.AuthenticationService
         const { user, pass } = req.body
         try {
@@ -16,7 +16,7 @@ module.exports = function (app) {
                 res.status(200).redirect("/cnpjs-crud")
             } else res.status(400).render("login-erro")
         } catch (e){
-            res.end(e.message ? e.message : e)
+            res.status(400).end(JSON.stringify({error: e?.message ? e.message : "unknown"}))
         }
     })
 

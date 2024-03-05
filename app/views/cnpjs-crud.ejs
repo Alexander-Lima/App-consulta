@@ -55,23 +55,23 @@
                     <% for (let i = 0; i <= results.length - 1; i++) { %>
                         <% let item = results[i] %>
                         <% let cnpjCpfFormatted = "" %>
-                        <% if (item.CNPJ.length === 14) { %>
-                            <% cnpjCpfFormatted = `${item.CNPJ.substring(0,2)}.${item.CNPJ.substring(2,5)}.${item.CNPJ.substring(5,8)}/${item.CNPJ.substring(8,12)}-${item.CNPJ.substring(12,14)}` %>
+                        <% if (item.cnpj.length === 14) { %>
+                            <% cnpjCpfFormatted = `${item.cnpj.substring(0,2)}.${item.cnpj.substring(2,5)}.${item.cnpj.substring(5,8)}/${item.cnpj.substring(8,12)}-${item.cnpj.substring(12,14)}` %>
                         <% } else { %>
-                            <% cnpjCpfFormatted = `${item.CNPJ.substring(0,3)}.${item.CNPJ.substring(3,6)}.${item.CNPJ.substring(6,9)}-${item.CNPJ.substring(9,11)}` %>
+                            <% cnpjCpfFormatted = `${item.cnpj.substring(0,3)}.${item.cnpj.substring(3,6)}.${item.cnpj.substring(6,9)}-${item.cnpj.substring(9,11)}` %>
                         <% } %>
-                        <tr data-id=<%= item.ID %> class=<%= i % 2 === 0 ? "even" : "odd" %>>
-                            <td class="td-id"><%= item.ID %></td>
-                            <td class="td-status"><%= item.STATUS === 1 ? "ATIVO" : "INATIVO" %></td>
+                        <tr data-id=<%= item.id %> class=<%= i % 2 === 0 ? "even" : "odd" %>>
+                            <td class="td-id"><%= item.id %></td>
+                            <td class="td-status"><%= item.status === 1 ? "ATIVO" : "INATIVO" %></td>
                             <td class="td-cnpj"><%= cnpjCpfFormatted %></td>
-                            <td class="td-ccp"><%= item.CCP_NUMBER && item.CCP_NUMBER !== "NULL"? item.CCP_NUMBER : "----------" %></td>
-                            <td class="td-mun"><%= item.MUNICIPIO %></td>
+                            <td class="td-ccp"><%= item.ccp_number ? item.ccp_number : "----------" %></td>
+                            <td class="td-mun"><%= item.municipio %></td>
                             <td class="td-name">
-                                <%= item.NOME_EMPRESA %>
-                                <% if (item.COMMENT_ID && item.COMMENT_TEXT) { %>
+                                <%= item.nome_empresa %>
+                                <% if (item.comment_id && item.comment_text) { %>
                                     <div 
                                         class="comments"
-                                        data-comment="<%= item.COMMENT_TEXT %>">
+                                        data-comment="<%= item.comment_text %>">
                                             <img src="/images/text-box.png">
                                     </div>
                                 <% } %>

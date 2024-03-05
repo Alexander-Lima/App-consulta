@@ -96,7 +96,7 @@ function generateDebitElements(debit, sent) {
         debitSpan.setAttribute("data-barcode", codigo_barras)
         debitListItem.className = situacao === "PAGO" ? "pago" : "isento"    
     } else if(situacao) {
-        const isSentYear = sent.includes(ano_prestacao)
+        const isSentYear = sent.includes(parseInt(ano_prestacao))
         const itemDateArray = data_vencimento.split("/");
         const formatedDate = itemDateArray[2] + "-" + itemDateArray[1] + "-" + itemDateArray[0];
         const milisecondsMonth = 2592000000
@@ -232,7 +232,7 @@ async function markUnmarkYear() {
             const isSent = element.classList.contains("sent")
             const id = getParent(element, 3).dataset?.id
             const year = event.target.innerHTML.replaceAll("\n", "").replaceAll(" ", "")
-            const body = {id: id, year: year}
+            const body = { id: id, year: year }
             
             if(!(id && body)) return
             const config = {

@@ -1,19 +1,15 @@
 const bcrypt = require('bcrypt');
 
 module.exports = function() {
-    this.authenticate = (DAO, user, pass) => {
+    this.authenticate = async (DAO, user, pass) => {
         return new Promise(async (res, rej) => {
-            try {
-                const { HASH }  = await DAO.getUserPasswordHash(user)
-                bcrypt.compare(pass, HASH, (err, result) => {
-                    if(err) {
-                        throw new Error(err)
-                    }
-                    res(result)
-                })
-            } catch (e) {
-                return rej(e)
-            }
+            const { hash }  = await DAO.getUserPasswordHash(user)
+            bcrypt.compare(pass, hash, (err, result) => {
+                if(err) {
+                    rej(err)
+                }
+                res(result)
+            })
         })
     }
     return this
