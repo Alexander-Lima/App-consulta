@@ -8,7 +8,7 @@ module.exports = function (app) {
         const Service = app.app.services.ConsultaTPIService
         const todayDate = new Date()
         try {
-            const cnpjList = (await DAO.getAllJoinTPI()).filter(item => item.id <= 20)
+            const cnpjList = (await DAO.getAllJoinTPI())
             const data = await Service.getTPI(cnpjList)
             res.render("./consulta-tpi", { cnpjs: data, today: todayDate })
             res.status(200).end()

@@ -50,8 +50,7 @@ module.exports = function (app) {
         const DAO = new app.app.models.DAO(dbClient)
         try {
             await DAO.deleteItems(req.body)
-            res.status(200)
-            res.end()
+            res.status(200).end()
         } catch (e) {
             res.status(400).end(JSON.stringify({error: e?.message ? e.message : "unknown"}))
         }

@@ -6,7 +6,7 @@ module.exports = function () {
         if(!results) { 
             throw new Error("Falha no Banco de Dados!")
         }
-        const data = await getData(results.filter(emp => emp.id <= 5))
+        const data = await getData(results)
         if(!data) { 
             throw new Error("Falha na busca de CCP!")
         }

@@ -127,9 +127,13 @@ module.exports = function () {
         const queryDeleteCcpList = `DELETE FROM appconsulta.ccp WHERE trackcnpj IN (${placeholders});`
         const queryDeleteListCnpj = `DELETE FROM appconsulta.cnpj WHERE id IN (${placeholders});`
         const queryDeleteCommentsList = `DELETE FROM appconsulta.comments WHERE id IN (${placeholders});`
+        const queryDeleteYearsTpiList = `DELETE FROM appconsulta.years_tpi WHERE trackcnpj IN (${placeholders});`
+        const queryDeleteDuamCcpList = `DELETE FROM appconsulta.duam_ccp WHERE cnpj_id IN (${placeholders});`
 
         await this.dbClient.query("BEGIN;")
         await this.dbClient.query(queryDeleteCcpList, cnpjList)
+        await this.dbClient.query(queryDeleteDuamCcpList, cnpjList)
+        await this.dbClient.query(queryDeleteYearsTpiList, cnpjList)
         await this.dbClient.query(queryDeleteListCnpj, cnpjList)
         await this.dbClient.query(queryDeleteCommentsList, cnpjList)
         await this.dbClient.query("END;")
