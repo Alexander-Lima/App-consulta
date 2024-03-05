@@ -196,26 +196,25 @@ module.exports = function () {
         return result[0]
     }
     
-    DAO.prototype.toggleStatus = function (objArray) {
-        return new Promise(async (res, rej) => {
-            const enabled = []
-            const disabled = []
-            for(item of objArray) {
-                item.newStatus === 1 ? enabled.push(item.id) : disabled.push(item.id)
-            }
-            const queryEnabled = `UPDATE CNPJ SET STATUS=1 WHERE ID IN ($1);`
-            const queryDisabled = `UPDATE CNPJ SET STATUS=0 WHERE ID IN ($1);`
-    
-            try {
-                this.dbClient.exec("BEGIN TRANSACTION;")
-                if(enabled) await this.execQuery(sqlEnabled, [enabled.join(",")], "Falha ao alterar status de itens ativos!")
-                if(disabled) await this.execQuery(sqlDisabled, [disabled.join(",")], "Falha ao alterar status de itens inativos!")
-                this.dbClient.exec("END TRANSACTION;")
-                res()
-            } catch (err) {
-                rej(err.message)
-            }
-        })
+    DAO.prototype.toggleStatus = async function (objArray) {
+        const enabled = []
+        const disabled = []
+        for(item of objArray) {
+            item.newStatus === 1 ? enabled.push(parseInt(item.id)) : disabled.push(parseInt(item.id))
+        }
+        const placeholdersEnabled = enabled.map((curElement, index) => `$${ index + 1}`).join(",")
+        const placeholdersDisabled = disabled.map((curElement, index) => `$${ index + 1}`).join(",")
+        const queryEnableStatus = `UPDATE appconsulta.cnpj SET status=1 WHERE id IN (${placeholdersEnabled});`
+        const queryDisableStatus = `UPDATE appconsulta.cnpj SET status=0 WHERE id IN (${placeholdersDisabled});`
+
+        await this.dbClient.query("BEGIN;")
+        if(enabled.length > 0) {
+            await this.dbClient.query(queryEnableStatus, enabled)
+        } 
+        if(disabled.length > 0) {
+            await this.dbClient.query(queryDisableStatus, disabled)
+        }
+        await this.dbClient.query("END;")
     }
     return DAO
 }
