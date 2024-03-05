@@ -3,10 +3,10 @@ const { Client } = require('pg');
 module.exports = function () {
     this.openClient = async function () {
         const client = new Client({
-            user: 'postgres',
+            user: process.env.POSTGRES_USER,
             host: '192.168.1.203',
             database: 'postgres',
-            password: '172125',
+            password: process.env.POSTGRES_PASS,
             port: '5432'
         })
         await client.connect()
