@@ -5,8 +5,8 @@ module.exports = function (app) {
     })
 
     app.post("/login", async (req, res) => {
-        const db = app.config.database.databaseConnection.db()
-        const DAO = new app.app.models.DAO(db)
+        const dbClient = await app.config.database.databaseConnection.openClient()
+        const DAO = new app.app.models.DAO(dbClient)
         const Service = app.app.services.AuthenticationService
         const { user, pass } = req.body
         try {

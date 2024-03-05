@@ -191,8 +191,9 @@ module.exports = function () {
     }
     
     DAO.prototype.getUserPasswordHash = async function (user) {
-        const query = "SELECT * FROM USERS WHERE NAME= $1;"
-        return this.findOne(sql, [user], "Usuário não encontrado!")
+        const queryGetUser = "SELECT * FROM appconsulta.users WHERE name= $1;"
+        const result = (await this.dbClient.query(queryGetUser, [user])).rows
+        return result[0]
     }
     
     DAO.prototype.toggleStatus = function (objArray) {

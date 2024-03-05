@@ -6,7 +6,7 @@ const ip = require('ip')
 const sessions = require('express-session')
 const oneHour = 1000 * 60 * 60;
 const authenticationMiddleware = (req, res, next) => {
-    const DEBUG = true
+    const DEBUG = false
     let { userId } = req.session
     const { url, method } = req
     if(DEBUG) userId = "DEBUG"
