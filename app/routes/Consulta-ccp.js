@@ -4,9 +4,9 @@ module.exports = function (app) {
     app.get('/consulta-ccp', async (req, res) => {
         const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
-        const getCCP = app.app.services.ConsultaCCPService.getCCP
+        const Service = app.app.services.ConsultaCCPService
         try {
-            const data = await getCCP(DAO)
+            const data = await Service.getCCP(DAO)
             res.render('consulta-ccp', { results : data })
             res.status(200).end()
         } catch (e) {
@@ -18,7 +18,7 @@ module.exports = function (app) {
         const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
-            await DAO.insertSentDuam(req.body)
+            await DAO.insertOrUpdateSentDuam(req.body)
             res.status(201).end()
         } catch (e) {
             res.status(400).end(JSON.stringify({error: e?.message ? e.message : "unknown"}))

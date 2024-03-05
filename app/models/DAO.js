@@ -147,34 +147,47 @@ module.exports = function () {
         await this.dbClient.query(queryDeleteSentYearsTpi, [id, year])
     }
     
-    DAO.prototype.insertSentDuam = async function (data) {
+    DAO.prototype.insertOrUpdateSentDuam = async function (data) {
         const { id, duam } = data
-        const findId = "SELECT * FROM DUAM_CCP WHERE CNPJ_ID=$1;"
-        const queryInsertDuam = "INSERT INTO DUAM_CCP VALUES(default, $1, $2);"
-        const queryUpdateDuam = "UPDATE DUAM_CCP SET DUAM=$1 WHERE CNPJ_ID=$2;"
-        const objExists = await this.findOne(findId, [id], "Falha ao buscar DUAM!");
-        if(objExists) {
-            const isDuamAlreadyInserted = objExists.DUAM.includes(duam)
-            if(isDuamAlreadyInserted) return
-            const newDuams = [...objExists.DUAM.split(";"), duam]
-            return this.execQuery(sqlUpdateDuam, [newDuams.join(";"), id], "Falha ao inserir DUAM na tabela!")
+        const queryInsertDuam = "INSERT INTO appconsulta.duam_ccp VALUES(default, $1, $2);"
+        const queryUpdateDuam = "UPDATE appconsulta.duam_ccp SET duam=$1 WHERE cnpj_id=$2;"
+        const objExists = await this.findDuamByCnpjId(id)
+
+        if(objExists.length > 0) {
+            const isDuamAlreadyInserted = objExists[0]?.duam?.includes(duam)
+            if(isDuamAlreadyInserted) {
+                return
+            }
+            const newDuams = [...objExists[0]?.duam?.split("|"), duam]
+            return await this.dbClient.query(queryUpdateDuam, [newDuams.join("|"), id])
         }
-        return this.execQuery(sqlInsertDuam, [duam, id], "Falha ao inserir DUAM na tabela!")
+        await this.dbClient.query(queryInsertDuam, [duam, id])
     }
     
     DAO.prototype.deleteSentDuam = async function (data) {
         const { id, duam } = data
-        const findId = "SELECT * FROM DUAM_CCP WHERE CNPJ_ID=$1;"
-        const objExists = await this.findOne(findId, [id], "Falha ao buscar DUAM!");
-        const queryDeleteDuam = "DELETE FROM DUAM_CCP WHERE CNPJ_ID=$1;"
-        const queryUpdateDuam = "UPDATE DUAM_CCP SET DUAM=$1 WHERE CNPJ_ID=$2;"
-        if(!objExists) return
-        const duamsArray = objExists.DUAM?.split(";")
+        const queryDeleteDuam = "DELETE FROM appconsulta.duam_ccp WHERE cnpj_id=$1;"
+        const queryUpdateDuam = "UPDATE appconsulta.duam_ccp SET duam=$1 WHERE cnpj_id=$2;"
+        const objExists = await this.findDuamByCnpjId(id)
+
+        if(!objExists) {
+            return
+        }
+        const duamsArray = objExists[0]?.duam?.split("|")
         const duamExists = duamsArray.includes(duam.toString())
-        if(!duamExists) return
+        if(!duamExists) {
+            return
+        }
         const newDuamsArray = duamsArray.filter(currentDuam => currentDuam !== duam.toString())
-        if(newDuamsArray.length === 0) return this.execQuery(sqlDeleteDuam, [id], "Falha ao deletar DUAM na tabela!")
-        return this.execQuery(sqlUpdateDuam, [newDuamsArray.join(";"), id], "Falha ao deletar DUAM na tabela!")
+        if(newDuamsArray.length === 0) {
+            return await this.dbClient.query(queryDeleteDuam, [id])
+        }
+        await this.dbClient.query(queryUpdateDuam, [newDuamsArray.join("|"), id])
+    }
+
+    DAO.prototype.findDuamByCnpjId = async function (id) {
+        const findId = "SELECT * FROM appconsulta.duam_ccp WHERE cnpj_id=$1;"
+        return (await this.dbClient.query(findId, [id])).rows
     }
     
     DAO.prototype.getUserPasswordHash = async function (user) {
