@@ -135,16 +135,16 @@ module.exports = function () {
         await this.dbClient.query("END;")
     }
     
-    DAO.prototype.insertSentYearTPI = function (data) {
+    DAO.prototype.insertSentYearTPI = async function (data) {
         const { id, year } = data
-        const query = "INSERT INTO YEARS_TPI VALUES(default, $1, $2);"
-        return this.execQuery(sql, [year, id], "Falha ao inserir o ano na tabela!")
+        const queryInsertYearsTpi = "INSERT INTO appconsulta.years_tpi VALUES(default, $2, $1);"
+        await this.dbClient.query(queryInsertYearsTpi, [id, year])
     }
     
-    DAO.prototype.deleteSentYearTPI = function (data) {
+    DAO.prototype.deleteSentYearTPI = async function (data) {
         const { id, year } = data
-        const query = `DELETE FROM YEARS_TPI WHERE YEAR= $1 AND TRACKCNPJ= $2;`
-        return this.execQuery(sql, [year, id], "Falha ao deletar o ano da tabela!")
+        const queryDeleteSentYearsTpi = `DELETE FROM appconsulta.years_tpi WHERE year= $2 AND trackcnpj= $1;`
+        await this.dbClient.query(queryDeleteSentYearsTpi, [id, year])
     }
     
     DAO.prototype.insertSentDuam = async function (data) {
