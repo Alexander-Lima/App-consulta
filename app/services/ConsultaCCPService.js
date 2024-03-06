@@ -15,12 +15,37 @@ module.exports = function () {
         
     async function getData (itemsList) {
         let results = []
-        
-        for (item of itemsList) {
+        const maxPromises = 10
+
+        while(itemsList.length > 0) {
+            const promisesArray = getPromisesArray(itemsList, maxPromises)
+            const promises = Promise.all(promisesArray)
+            const cnpjData = await promises
+            results.push(...cnpjData)
+        }  
+        return results.filter(item => item)
+    }
+
+    function getPromisesArray(itemsArray, itemsToProcess) {
+        let resultArray = []
+
+        for(let index = 0; index < itemsToProcess; index++) {
+            if(itemsArray.length > 0) {
+                const arrayItem = itemsArray.pop()
+                resultArray.push(getDataForCnpj(arrayItem))
+                continue
+            }
+            break
+        }
+        return resultArray
+    }
+
+    async function getDataForCnpj(item) {
+        return new Promise(async (res) => {
             const {
                 id,
-                status,
                 cnpj,
+                status,
                 ccp_number,
                 nome_empresa,
                 municipio,
@@ -30,11 +55,11 @@ module.exports = function () {
                 licenses_sent
             } = item
 
+            console.log("processando", cnpj)
             if(status === 0) {
-                continue 
+                return res(null) 
             }
-            const url = "https://sig.catalao.go.gov.br/sig/rest/servicoContribuinteController/pesquisarDebitos"
-            const configs = { headers: { "Content-Type" : "application/json" } }
+
             let itemResult = {
                 id: id,
                 cnpj: cnpj,
@@ -48,11 +73,14 @@ module.exports = function () {
                 debits: [],
                 license_sent: licenses_sent
             }
+
             if(!ccp_number) {
                 itemResult.failure = false
-                results.push(itemResult);
-                continue
+                return res(itemResult)
             }
+    
+            const url = "https://sig.catalao.go.gov.br/sig/rest/servicoContribuinteController/pesquisarDebitos"
+            const configs = { headers: { "Content-Type" : "application/json" } }
             const data = { "ccp" : Number(ccp_number) }
             const resp = await axios.post(url, data, configs)
                                     .catch(() => false)   
@@ -60,9 +88,8 @@ module.exports = function () {
                 itemResult.debits = resp.data?.listaRetorno
                 itemResult.failure = false
             }
-            results.push(itemResult)
-        }  
-        return results
+            res(itemResult)
+        })
     }
     return this
 }
