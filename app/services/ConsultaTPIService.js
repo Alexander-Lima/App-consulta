@@ -10,7 +10,9 @@ module.exports = function () {
             if(!items) { 
                 return rej("Falha ao buscar empresas no Sicabom")
             }
+            console.time('await')
             const data = await getTpidata(items)
+            console.timeEnd('await')
             if(!data) { 
                 return rej("Falha ao buscar dados no Sicabom")
             }
@@ -31,7 +33,9 @@ module.exports = function () {
                     cnpj,
                     status
                 } = row
-                if(status === 0) continue
+                if(status === 0) {
+                    continue
+                }
                 let cnpjData = {
                     id: id,
                     cpf_cnpj: cnpj,

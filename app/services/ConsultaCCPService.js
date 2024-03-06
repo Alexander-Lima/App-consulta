@@ -1,4 +1,5 @@
 const axios = require('axios').default
+const util = require('../utilities/util').util
 
 module.exports = function () {
     this.getCCP = async (DAO) => {
@@ -18,26 +19,12 @@ module.exports = function () {
         const maxPromises = 10
 
         while(itemsList.length > 0) {
-            const promisesArray = getPromisesArray(itemsList, maxPromises)
+            const promisesArray = util.getPromisesArray(itemsList, getDataForCnpj, maxPromises)
             const promises = Promise.all(promisesArray)
             const cnpjData = await promises
             results.push(...cnpjData)
         }  
         return results.filter(item => item)
-    }
-
-    function getPromisesArray(itemsArray, itemsToProcess) {
-        let resultArray = []
-
-        for(let index = 0; index < itemsToProcess; index++) {
-            if(itemsArray.length > 0) {
-                const arrayItem = itemsArray.pop()
-                resultArray.push(getDataForCnpj(arrayItem))
-                continue
-            }
-            break
-        }
-        return resultArray
     }
 
     async function getDataForCnpj(item) {
