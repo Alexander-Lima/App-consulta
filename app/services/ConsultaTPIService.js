@@ -1,28 +1,36 @@
 const axios = require('axios').default
 const formData = require('form-data')
+const util = require('../utilities/util').util
 const error_SEM_REGISTRO = false
 const error_FALHA = false
 
 module.exports = function () {
-    this.getTPI = (results) => {
+    this.getTPI = (dbItems) => {
         return new Promise (async (res, rej) => {
-            const items = await getcnpjData(results)
-            if(!items) { 
+            let cnpjDataArray = []
+            let resultArray = []
+            const maxPromises = 10
+    
+            while(dbItems.length > 0) {
+                const promisesResult = await util.getPromisesArray(dbItems, getCnpjData, maxPromises)
+                cnpjDataArray.push(...promisesResult)
+            }  
+            if(!cnpjDataArray) { 
                 return rej("Falha ao buscar empresas no Sicabom")
             }
-            console.time('await')
-            const data = await getTpidata(items)
-            console.timeEnd('await')
-            if(!data) { 
+            cnpjDataArray = cnpjDataArray.filter(cnpj => cnpj)
+            while(cnpjDataArray.length > 0) {
+                const promisesResult = await util.getPromisesArray(cnpjDataArray, getTpidata, maxPromises)
+                resultArray.push(...promisesResult)
+            }  
+            if(!resultArray) { 
                 return rej("Falha ao buscar dados no Sicabom")
             }
-            res(data)
+            res(resultArray)
         })
 
-        async function getcnpjData (rows) {
-            let results = []
-        
-            for (row of rows) {
+        async function getCnpjData (item) {
+            return new Promise(async (res) => {
                 const {
                     id,
                     nome_empresa,
@@ -32,9 +40,9 @@ module.exports = function () {
                     comment_text,
                     cnpj,
                     status
-                } = row
+                } = item
                 if(status === 0) {
-                    continue
+                    return res()
                 }
                 let cnpjData = {
                     id: id,
@@ -60,7 +68,7 @@ module.exports = function () {
                 if(!error_SEM_REGISTRO) {
                     resp = await axios.post(
                         "https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
-                        .catch(() => false)
+                        .catch((e) => false)
                 }
                 if(resp.data) {
                     const { C_ID, SP_ID, ANO_ATUAL, ANO_INICIO_TPI } = resp.data[0]
@@ -70,14 +78,12 @@ module.exports = function () {
                     cnpjData.ano_inicio_tpi = ANO_INICIO_TPI
                     cnpjData.sem_registro = false
                 }
-                results.push(cnpjData)
-            }
-            return results;   
+                res(cnpjData)
+            })
         }
         
-        async function getTpidata (items) {
-            let results = []
-            for (item of items) {
+        async function getTpidata (item) {
+            return new Promise(async (res) => {
                 const {
                     cpf_cnpj,
                     c_id,
@@ -87,8 +93,7 @@ module.exports = function () {
                     sem_registro
                 } = item
                 if(sem_registro) {
-                    results.push(item)
-                    continue
+                    return res(item)
                 }    
                 const form = new formData()
                 form.append("acao", "buscar_tpi")
@@ -100,10 +105,7 @@ module.exports = function () {
                 let resp = false
                 if(!error_FALHA) {
                     resp = await axios.post("https://sicabom.bombeiros.go.gov.br/application/server/dao_tpi.php", form)
-                    .catch(err => {
-                        console.log(err)
-                        return false
-                    })
+                    .catch(err => false)
                 }
                 if(resp.data) {
                     let debitObjects = []
@@ -121,9 +123,8 @@ module.exports = function () {
                     item.failed = false
                     item.debits = debitObjects
                 }
-                results.push(item)
-            }
-            return results;
+                res(item)
+            })
         }
     }
     return this

@@ -19,10 +19,8 @@ module.exports = function () {
         const maxPromises = 10
 
         while(itemsList.length > 0) {
-            const promisesArray = util.getPromisesArray(itemsList, getDataForCnpj, maxPromises)
-            const promises = Promise.all(promisesArray)
-            const cnpjData = await promises
-            results.push(...cnpjData)
+            const promisesResult = await util.getPromisesArray(itemsList, getDataForCnpj, maxPromises)
+            results.push(...promisesResult)
         }  
         return results.filter(item => item)
     }
