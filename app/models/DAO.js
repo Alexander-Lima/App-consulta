@@ -7,9 +7,10 @@ module.exports = function () {
     
     DAO.prototype.getAllJoinCCP = async function () {
         const query = "SELECT cnpj.id, cnpj.status, cnpj.cnpj, cnpj.nome_empresa, cnpj.status, cnpj.comment_id, cnpj.municipio,"
-        + "cnpj.licenses_sent, ccp.ccp_number, comments.comment_text, duam_ccp.duam FROM appconsulta.cnpj as cnpj LEFT OUTER "
+        + "cnpj.licenses_sent, ccp.ccp_number, comments.comment_text, duam_ccp.duams FROM appconsulta.cnpj as cnpj LEFT OUTER "
         + "JOIN appconsulta.ccp as ccp on cnpj.id=ccp.trackcnpj LEFT JOIN appconsulta.comments as comments ON comments.id=cnpj.comment_id "
-        + "LEFT JOIN appconsulta.duam_ccp as duam_ccp on duam_ccp.cnpj_id=cnpj.id ORDER BY cnpj.nome_empresa;"
+        + "LEFT JOIN (SELECT cnpj_id, array_agg(duam) as duams from appconsulta.duam_ccp group by cnpj_id) as duam_ccp"
+        + " on duam_ccp.cnpj_id=cnpj.id ORDER BY cnpj.nome_empresa;"
         return (await this.dbClient.query(query)).rows
     }
     
@@ -33,7 +34,7 @@ module.exports = function () {
     DAO.prototype.updateItem = async function (data) {
         const { cnpjId, cnpj, ccp, name, municipio, comments } = data
         const queryDeleteComment= "DELETE FROM appconsulta.comments WHERE id= $1;"
-        const queryDeleteCommentCnpj= "UPDATE appconsulta.cnpj SET comment_id=NULL WHERE id= $1;"
+        const queryDeleteCommentCnpj = "UPDATE appconsulta.cnpj SET comment_id=NULL WHERE id= $1;"
         const queryDeleteCCP  = "DELETE FROM appconsulta.ccp WHERE TRACKCNPJ= $1;"
         const queryUpdateCNPJ = "UPDATE appconsulta.cnpj SET cnpj= $1, nome_empresa= $2, municipio= $3, comment_id= $4,"
         + "last_update=CURRENT_TIMESTAMP WHERE ID= $5;" 
@@ -151,47 +152,18 @@ module.exports = function () {
         await this.dbClient.query(queryDeleteSentYearsTpi, [id, year])
     }
     
-    DAO.prototype.insertOrUpdateSentDuam = async function (data) {
+    DAO.prototype.insertSentDuam = async function (data) {
         const { id, duam } = data
         const queryInsertDuam = "INSERT INTO appconsulta.duam_ccp VALUES(default, $1, $2);"
-        const queryUpdateDuam = "UPDATE appconsulta.duam_ccp SET duam=$1 WHERE cnpj_id=$2;"
-        const objExists = await this.findDuamByCnpjId(id)
 
-        if(objExists.length > 0) {
-            const isDuamAlreadyInserted = objExists[0]?.duam?.includes(duam)
-            if(isDuamAlreadyInserted) {
-                return
-            }
-            const newDuams = [...objExists[0]?.duam?.split("|"), duam]
-            return await this.dbClient.query(queryUpdateDuam, [newDuams.join("|"), id])
-        }
         await this.dbClient.query(queryInsertDuam, [duam, id])
     }
     
     DAO.prototype.deleteSentDuam = async function (data) {
         const { id, duam } = data
-        const queryDeleteDuam = "DELETE FROM appconsulta.duam_ccp WHERE cnpj_id=$1;"
-        const queryUpdateDuam = "UPDATE appconsulta.duam_ccp SET duam=$1 WHERE cnpj_id=$2;"
-        const objExists = await this.findDuamByCnpjId(id)
+        const queryDeleteDuam = "DELETE FROM appconsulta.duam_ccp WHERE cnpj_id=$1 AND duam=$2;"
 
-        if(!objExists) {
-            return
-        }
-        const duamsArray = objExists[0]?.duam?.split("|")
-        const duamExists = duamsArray.includes(duam.toString())
-        if(!duamExists) {
-            return
-        }
-        const newDuamsArray = duamsArray.filter(currentDuam => currentDuam !== duam.toString())
-        if(newDuamsArray.length === 0) {
-            return await this.dbClient.query(queryDeleteDuam, [id])
-        }
-        await this.dbClient.query(queryUpdateDuam, [newDuamsArray.join("|"), id])
-    }
-
-    DAO.prototype.findDuamByCnpjId = async function (id) {
-        const findId = "SELECT * FROM appconsulta.duam_ccp WHERE cnpj_id=$1;"
-        return (await this.dbClient.query(findId, [id])).rows
+        await this.dbClient.query(queryDeleteDuam, [id, duam])
     }
     
     DAO.prototype.getUserPasswordHash = async function (user) {
