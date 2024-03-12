@@ -7,7 +7,7 @@ module.exports = function (app) {
         const Service = app.app.services.ConsultaCCPService
         try {
             const data = await Service.getCCP(DAO)
-            res.render('consulta-ccp', { results : data })
+            res.render('consulta-ccp', { results : data.sort((a, b) => '' + a.nome_empresa.localeCompare(b.nome_empresa)) })
             res.status(200).end()
         } catch (e) {
             res.status(400).end(JSON.stringify({error: e?.message ? e.message : "unknown"}))
@@ -18,7 +18,7 @@ module.exports = function (app) {
         const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
-            await DAO.insertOrUpdateSentDuam(req.body)
+            await DAO.insertSentDuam(req.body)
             res.status(201).end()
         } catch (e) {
             res.status(400).end(JSON.stringify({error: e?.message ? e.message : "unknown"}))

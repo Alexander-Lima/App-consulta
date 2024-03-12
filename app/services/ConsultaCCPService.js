@@ -36,11 +36,10 @@ module.exports = function () {
                 municipio,
                 comment_id,
                 comment_text,
-                duam,
+                duams,
                 licenses_sent
             } = item
 
-            console.log("processando", cnpj)
             if(status === 0) {
                 return res(null) 
             }
@@ -54,7 +53,7 @@ module.exports = function () {
                 municipio: municipio,
                 comment_id: comment_id,
                 comment_text: comment_text,
-                duam_sent: duam ? duam.split("|") : [],
+                duam_sent: duams ? duams : [],
                 debits: [],
                 license_sent: licenses_sent
             }
