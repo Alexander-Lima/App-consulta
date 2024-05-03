@@ -1,9 +1,12 @@
-const axios = require('axios').default
+const https = require('https')
 const util = require('../utilities/util').util
 
 module.exports = function () {
+    const httpAgent = new https.Agent({ rejectUnauthorized: false })
+    const axios = require('axios').default
+
     this.getCCP = async (DAO) => {
-        const results = await DAO.getAllJoinCCP()
+        const results = (await DAO.getAllJoinCCP())
         if(!results) { 
             throw new Error("Falha no Banco de Dados!")
         }
@@ -64,10 +67,10 @@ module.exports = function () {
             }
     
             const url = "https://sig.catalao.go.gov.br/sig/rest/servicoContribuinteController/pesquisarDebitos"
-            const configs = { headers: { "Content-Type" : "application/json" } }
+            const configs = { headers: { "Content-Type" : "application/json" }, httpsAgent: httpAgent }
             const data = { "ccp" : Number(ccp_number) }
             const resp = await axios.post(url, data, configs)
-                                    .catch(() => false)   
+                                    .catch((error) => false)   
             if(resp.data) {
                 itemResult.debits = resp.data?.listaRetorno
                 itemResult.failure = false
