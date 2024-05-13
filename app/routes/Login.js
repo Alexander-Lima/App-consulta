@@ -14,7 +14,9 @@ module.exports = function (app) {
             if (authenticationResult) {
                 req.session.userId = user
                 res.status(200).redirect("/cnpjs-crud")
-            } else res.status(400).render("login-erro")
+            } else {
+                res.status(400).render("login-erro")
+            }
         } catch (e){
             res.status(400).end(JSON.stringify({error: e?.message ? e.message : "unknown"}))
         }
