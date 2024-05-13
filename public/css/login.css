@@ -62,7 +62,6 @@
 }
 
 #error {
-    position: absolute;
     background-color: rgb(231, 76, 60);
     color: white;
     width: 15%;
@@ -75,7 +74,7 @@
     border-radius: 6px;
     animation: hideError 4s linear;
     opacity: 0;
-    top: 4em;
+    margin-top: 1em;
 }
 
 @keyframes hideError {

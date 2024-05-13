@@ -5,6 +5,8 @@ const app = express();
 const ip = require('ip')
 const sessions = require('express-session')
 const oneHour = 1000 * 60 * 60;
+const port = 3000
+const ipAddress = ip.address()
 const authenticationMiddleware = (req, res, next) => {
     const DEBUG = false
     let { userId } = req.session
@@ -40,7 +42,7 @@ app.use(authenticationMiddleware);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser())
 app.use(bodyParser.json())
-app.listen(3000, ip.address(), () => { console.log("Aplicação de Consultas Prefeitura e Sicabom está rodando...") });
+app.listen(port, ipAddress, () => { console.log(`Aplicação de Consultas Prefeitura e Sicabom está rodando em ${ipAddress}:${port}`) });
 
 module.exports = app   
   
