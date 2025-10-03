@@ -6,7 +6,7 @@ const ip = require('ip')
 const sessions = require('express-session')
 const oneHour = 1000 * 60 * 60;
 const port = 3000
-const ipAddress = ip.address()
+const ipAddress = 'localhost'
 const authenticationMiddleware = (req, res, next) => {
     const DEBUG = false
     let { userId } = req.session
@@ -21,7 +21,7 @@ const authenticationMiddleware = (req, res, next) => {
     if(url.startsWith("/cnpjs-crud")) {
         if(!userId) { 
             if(method === "GET" ) {
-                return res.redirect("/login")
+                return res.redirect("/app-consulta/login")
             }
             return res.status(400).end("Usuário não está logado!")
         }
@@ -42,7 +42,7 @@ app.use(authenticationMiddleware);
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser())
 app.use(bodyParser.json())
-app.listen(port, ipAddress, () => { console.log(`Aplicação de Consultas Prefeitura e Sicabom está rodando em ${ipAddress}:${port}`) });
+app.listen(port, 'localhost', () => { console.log(`Aplicação de Consultas Prefeitura e Sicabom está rodando em ${ipAddress}:${port}`) });
 
 module.exports = app   
   

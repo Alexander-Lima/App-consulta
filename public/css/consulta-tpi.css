@@ -316,7 +316,7 @@ span {
     text-align: center;
 }
 .sent::after {
-    content: url(/images/ok.png);
+    content: url(/app-consulta/images/ok.png);
     top: -0.5em;
     left: -1em;
     width: 0;

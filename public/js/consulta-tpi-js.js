@@ -28,7 +28,7 @@ function updateCurrentItem () {
         button.addEventListener('click', async (event) => {
             const parent = getParent(event.target, 5)
             const id = parent.dataset.id
-            const resp = await fetch(`/consulta-tpi/individual?id=${id}`, {
+            const resp = await fetch(`/app-consulta/consulta-tpi/individual?id=${id}`, {
                 method: "POST",
                 headers: {"Content-Type" : "Application/json"}
             })
@@ -150,7 +150,6 @@ function applyFilter () {
     })
 }
 
-
 function filterTable (options) {
     const rows = document.querySelectorAll('.cnpj');
     const noItems = document.getElementById("no-items")
@@ -240,7 +239,7 @@ async function markUnmarkYear() {
                 headers: {"Content-Type" : "Application/json"},
                 body: JSON.stringify(body)
             }
-            const resp = await fetch("/consulta-tpi", config)
+            const resp = await fetch("/app-consulta/consulta-tpi", config)
             if(!resp.ok) return 
             if(isSent) element.classList.remove("sent")
             else element.classList.add("sent")

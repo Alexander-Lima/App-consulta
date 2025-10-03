@@ -38,7 +38,7 @@ function handleDelete() {
         try {
             let idList = []
             itemsList.forEach(item => idList.push(item.getAttribute("data-id")))
-            const resp = await send("/cnpjs-crud", "DELETE", idList)
+            const resp = await send("/app-consulta/cnpjs-crud", "DELETE", idList)
             toggleClass(confirmOverlay, "show", "hide")
             if(resp.ok) toggleWarning("success", "", true) 
             else toggleWarning("error", await resp.text(), false) 
@@ -170,7 +170,7 @@ function handleSubmit () {
             comments: commentsText
         }
         try {
-            const resp = await send("/cnpjs-crud", cnpjId ? "PUT" : "POST", req_body)
+            const resp = await send("/app-consulta/cnpjs-crud", cnpjId ? "PUT" : "POST", req_body)
             resp.ok? toggleWarning("success", "", true) 
                     : toggleWarning("error", await resp.text(), false)  
         } catch {
@@ -247,7 +247,7 @@ function toggleStatus () {
         })
 
         try {
-            let resp = await send("/cnpjs-crud/toggle-status/", "PUT", items)
+            let resp = await send("/app-consulta/cnpjs-crud/toggle-status", "PUT", items)
             if(resp.ok) {
                 toggleWarning("success", "", false)
                 selectedItems.forEach(item => {

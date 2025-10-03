@@ -13,7 +13,7 @@ module.exports = function (app) {
             const authenticationResult = await Service.authenticate(DAO, user, pass)
             if (authenticationResult) {
                 req.session.userId = user
-                res.status(200).redirect("/cnpjs-crud")
+                res.status(200).redirect("/app-consulta/cnpjs-crud")
             } else {
                 res.status(400).render("login-erro")
             }
@@ -29,6 +29,6 @@ module.exports = function (app) {
 
     app.get('/logout', (req, res) => {
         req.session?.destroy()
-        res.redirect("/")
+        res.redirect("/app-consulta/")
     })
 }

@@ -142,7 +142,7 @@ async function markUnmarkDuam() {
                 headers: { "Content-Type" : "Application/json" },
                 body: JSON.stringify(body)
             }
-            const resp = await fetch("/consulta-ccp", config)
+            const resp = await fetch("/app-consulta/consulta-ccp", config)
             if(!resp.ok) return 
             if(isSent) element.classList.remove("sent")
             else element.classList.add("sent")
@@ -164,7 +164,7 @@ async function markLicenseSent() {
                 method: "PUT",
                 headers: { "Content-Type" : "text/html" },
             }
-            const resp = await fetch(`/consulta-ccp?id=${id}&licenseSent=${isSent ? "0" : "1"}`, config)
+            const resp = await fetch(`/app-consulta/consulta-ccp?id=${id}&licenseSent=${isSent ? "0" : "1"}`, config)
             if(!resp.ok) {
                 return console.log(await resp.text())
             }

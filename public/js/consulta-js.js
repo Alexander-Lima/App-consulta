@@ -36,7 +36,7 @@ function updateCurrentItem () {
         button.addEventListener('click', async (event) => {
             let cnpjButton = event.target.parentElement.getAttribute("data-cnpj")
 
-            let resp = await fetch(`/consulta-individual?cnpj=${cnpjButton}`, {
+            let resp = await fetch(`/app-consulta/consulta-individual?cnpj=${cnpjButton}`, {
                 method: "POST",
                 headers: {"Content-Type" : "Application/json"}
             })

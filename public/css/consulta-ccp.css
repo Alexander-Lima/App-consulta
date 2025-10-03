@@ -286,7 +286,7 @@ a {
     text-align: center;
 }
 .sent::before {
-    content: url(/images/ok.png);
+    content: url(/app-consulta/images/ok.png);
     top: -0.5em;
     left: 2.2em;
     width: 0;
