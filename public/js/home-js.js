@@ -1,17 +1,27 @@
-document.body.onload = function () {
+window.addEventListener("load", event => {
     handleClickCards()
-}
+})
+
+window.addEventListener("pagehide", event => {
+    toggleOverlay(false);
+})
 
 function handleClickCards () {
-    let cards = document.querySelectorAll(".card")
+    const cards = document.querySelectorAll(".card")
 
     cards.forEach(item => {
         item.addEventListener('click', async event => {
-            let href = event.target.parentElement.getAttribute('data-href');
-            let progressBarOverlay = document.getElementById("overlay")
-
-            progressBarOverlay.style.display= "flex"
-            window.location = href
+            toggleOverlay(true);
         })
     })
+}
+
+function toggleOverlay(show) {
+    const progressBarOverlay = document.getElementById("overlay")
+
+    if(!progressBarOverlay) {
+        return;
+    }
+
+    progressBarOverlay.style.display= show ? "flex" : "none"
 }
