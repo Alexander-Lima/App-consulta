@@ -1,15 +1,17 @@
-document.body.onload = function () {
-    addArrowClick()
-    markUnmarkAll()
-    applyFilter()
-    hideFiltersMouseOut()
-    updateCounters()
-    markUnmarkDuam()
-    markLicenseSent()
-}
+window.addEventListener('load', () => {
+        updateCNPJCounter()
+        registerAddArrowClick()
+        registerMarkUnmarkAll()
+        registerFilterEvents()
+        registerHideFiltersMouseOut()
+        registerMarkUnmarkDuam()
+        registerMarkLicenseSent()
+    }
+)
 
-function hideFiltersMouseOut() {
+function registerHideFiltersMouseOut() {
     const filters = document.querySelectorAll('div[id *= -filter]')
+
     filters.forEach(filter => {
         filter.addEventListener('mouseleave', () => {
             filter.style.display = "none"
@@ -17,7 +19,7 @@ function hideFiltersMouseOut() {
     })
 }
 
-function addArrowClick () {
+function registerAddArrowClick () {
     const arrows = document.querySelectorAll('.arrow')
 
     arrows.forEach(arrow => {
@@ -28,23 +30,23 @@ function addArrowClick () {
     })
 }
 
-function toggleStatusFilter(name) {
-    let filteredColumn = document.getElementById(`${name}-filter`)
+function toggleStatusFilter(type) {
+    const filteredColumn = document.getElementById(`${type}-filter`)
 
     filteredColumn.style.display === 'none' ?
         filteredColumn.style.display = 'flex':
         filteredColumn.style.display = 'none'
 }
 
-function markUnmarkAll () {
-    let buttons = document.querySelectorAll('.mark-unmark')
+function registerMarkUnmarkAll () {
+    const buttons = document.querySelectorAll('.mark-unmark')
     
     buttons.forEach(button => {
         button.addEventListener('click', () => {
             const column = button.parentElement.parentElement.id.split("-")[0]
 
-            let options = document.querySelectorAll(`.${column}-option`)
-            let label = document.getElementById(`${column}-mark-unmark-label`)
+            const options = document.querySelectorAll(`.${column}-option`)
+            const label = document.getElementById(`${column}-mark-unmark-label`)
 
             if(label.innerHTML === "MARCAR TODOS") {
                 options.forEach(option => option.checked = true)
@@ -57,65 +59,58 @@ function markUnmarkAll () {
     })
 }
 
-function applyFilter () {
+function registerFilterEvents () {
     const filterButtons = document.querySelectorAll('[id *= filter-button]')
 
     filterButtons.forEach(button => {
         button.addEventListener('click', () => {
-            const type = button.id.split("-")[0]
-            const options = document.querySelectorAll('input[class*="-option"]')
-            const filterShowOptions = []
-            for (option of options) if(option.checked) filterShowOptions.push(option.value)
-            filterTable(filterShowOptions)
-            updateCounters()
-            toggleStatusFilter(type)
+            filterTable()
+            updateCNPJCounter()
         })
     })
 }
 
-function updateCounters() {
-    updateCNPJCounter()
-    updateStatusCounter()
-}
-
 function updateCNPJCounter() {
-    const visibleRows = document.querySelectorAll('.row[style*="display: table-row;"]')
-    const total = document.querySelector('.th-left')
+    const visibleRows = 
+        Array.from(document.querySelectorAll('.data-row'))
+            .filter(item => item.style.display === "table-row")
+    const total = document.querySelector('#cnpjCount')
     total.dataset.totalcnpj= visibleRows.length
 }
 
-function updateStatusCounter() {
-    const visibleStatus = document.querySelectorAll('.row[style*="display: table-row"] > td > .status-years > li[style*="display: flex;"]')
-    const total = document.querySelector('.th-right')
-    total.dataset.totalstatus= visibleStatus.length
-}
-
-function filterTable (options) {
-    const rows = document.querySelectorAll('.row');
+function filterTable () {
+    const rows = document.querySelectorAll('.data-row')
     const noItems = document.getElementById("no-items")
+    const selectedoptions =
+        Array.from(document.querySelectorAll("[class*='option']"))
+            .filter(item => item.checked)
+            .map(item => item.value)
+
     noItems.style.display =  "table-row"
 
     rows.forEach(row => {
         const municipio = row.children[2].innerHTML
-        const status = row.children[3].children[0].children
-        const filterMunicipio = options.includes(municipio)
+        const status = row.children[4].children[0].children
+        
+        const filterMunicipio = selectedoptions.includes(municipio)
         let hasStatus = false
-        let filters = []
 
         for(item of status) {
             item.style.display = "none"
-            const itemClassName = item.className.split(" ")[0] 
-            if(options.includes(itemClassName)) {
-                item.style.display = "flex" 
+
+            if(selectedoptions.includes(item.dataset.status)) {
+                item.style.display = "" 
                 hasStatus = true
             }
         }
 
-        filters = [
+        const filters = [
             filterMunicipio,
             hasStatus
         ]
+
         const isVisible = filters.some(item => item === false)
+        
         if(!isVisible) {
             row.style.display = "table-row"
             noItems.style.display = "none"
@@ -125,7 +120,7 @@ function filterTable (options) {
     })
 }
 
-async function markUnmarkDuam() {
+async function registerMarkUnmarkDuam() {
     const elements = document.querySelectorAll(".pending")
 
     elements.forEach(element => {
@@ -150,7 +145,7 @@ async function markUnmarkDuam() {
     })
 }
 
-async function markLicenseSent() {
+async function registerMarkLicenseSent() {
     const elements = document.querySelectorAll(".no-pendencies")
 
     elements.forEach(element => {

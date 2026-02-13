@@ -5,151 +5,117 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Consulta CCP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
     <link type="text/css" rel="stylesheet" href="/app-consulta/css/consulta-ccp.css"/>
-    <link rel="icon" type="image/x-icon" href="/app-consulta/images/controller.ico">
     <script src="/app-consulta/js/consulta-ccp-js.js" defer></script>
 </head>
-    <body>
-        <div class="home-icon">
-            <a href="/app-consulta/">
-                <img src="/app-consulta/images/home.png">
-            </a>
-            HOME
-        </div>
-        <table id="main-table">
+    <body class="container-fluid py-2 px-3">
+        <table id="main-table" class="table table-striped text-center">
             <thead>
-                <% let totalStatus = 0 %>
                 <tr>
-                    <th class="th-left" data-totalcnpj="">CNPJ</th>
-                    <th class="th-center">RAZÃO SOCIAL</th>
-                    <th class="th-mun">MUNICÍPIO<span id="filter-municipio" class="arrow">&#8249</span></th>
-                    <th class="th-right" data-totalstatus="">STATUS<span id="filter-status" class="arrow">&#8249</span></th>
+                    <th id="cnpjCount" class="bg-primary text-light w-15" data-totalcnpj="">CNPJ</th>
+                    <th class="bg-primary text-light w-25">RAZÃO SOCIAL</th>
+                    <th class="bg-primary text-light w-10 position-relative">
+                        MUNICÍPIO<span id="filter-municipio" class="arrow">&#9660</span>
+                        <div id="municipio-filter" class="filter" style="display: none;">
+                            <div class="div-options">
+                                <% for (city of filters.city) { %>
+                                    <div>
+                                        <input type="checkbox" class="municipio-option" checked="checked" value="<%= city %>"/>
+                                        <label><%= city %></label>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <div class="mark-unmark-div">
+                                <input type="checkbox" class="mark-unmark" checked="checked"/>
+                                <label id="municipio-mark-unmark-label">DESMARCAR TODOS</label>
+                            </div>
+                            <div id="municipio-button" class="justify-content-center">
+                                <button type="button" id="municipio-filter-button" class="btn btn-primary">FILTRAR</button>
+                            </div>
+                        </div>
+                    </th>
+                    <th class="bg-primary text-light w-15">INSCRIÇÃO MUNICIPAL</th>
+                    <th class="bg-primary text-light w-25 position-relative">
+                        STATUS<span id="filter-status" class="arrow">&#9660</span>
+                        <div id="status-filter" class="filter" style="display: none; top: 2em; left: 7em;">
+                            <div class="div-options">
+                                <% for (status of filters.status) { %>
+                                    <div>
+                                        <input type="checkbox" class="status-option" checked="checked" value="<%= status %>"/>
+                                        <label><%= status %></label>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <div class="mark-unmark-div">
+                                <input type="checkbox" class="mark-unmark" checked="checked"/>
+                                <label id="status-mark-unmark-label">DESMARCAR TODOS</label>
+                            </div>
+                            <div id="status-button" class="justify-content-center">
+                                <button type="button" id="status-filter-button" class="btn btn-primary">FILTRAR</button>
+                            </div>
+                        </div>
+                    </th>
                 </tr>
             </thead>
             <tbody>
-                <% let statusList = [] %>
-                <% let municipioList = [] %>
-                <% for (let i = 0; i < results.length; i++) { %>
-                    <% const id = results[i]?.id %>
-                    <% const cnpj = results[i]?.cnpj %>
-                    <% const nome_empresa = results[i]?.nome_empresa %>
-                    <% const no_ccp_number = results[i]?.no_ccp_number %>
-                    <% const failure = results[i]?.failure %>
-                    <% const municipio = results[i]?.municipio %>
-                    <% const comment_text = results[i]?.comment_text %>
-                    <% const comment_id = results[i]?.comment_id %>
-                    <% const duam_sent = results[i]?.duam_sent %>
-                    <% const debits = results[i]?.debits %>
-                    <% const license_sent = results[i]?.license_sent %>
-                    <% let cnpjCpfFormatted = "" %>
-                    <% if(!municipioList.includes(municipio)) { %>
-                        <% municipioList.push(municipio) %>
-                    <% } %>
-                    <tr class="row" style="display: table-row;" data-id=<%= id %>>
-                        <% if (cnpj.length === 14) { %>
-                                <% cnpjCpfFormatted = `${cnpj.substring(0,2)}.${cnpj.substring(2,5)}.${cnpj.substring(5,8)}/${cnpj.substring(8,12)}-${cnpj.substring(12,14)}` %>
-                            <% } else { %>
-                                <% cnpjCpfFormatted = `${cnpj.substring(0,3)}.${cnpj.substring(3,6)}.${cnpj.substring(6,9)}-${cnpj.substring(9,11)}` %>
-                            <% } %>
-                        <td class="td-left"><%= cnpjCpfFormatted %></td>
-                        <td class="td-center">
-                            <%= nome_empresa %>
-                            <% if (comment_id && comment_text) { %>
+                <% for (item of data) { %>
+                    <% const cnpj = item?.cnpj %>
+                    <% const debits = item?.debits %>
+                    <% const cityCodes = item?.cityCodes?.join(", ") %>
+                    <% const cnpjCpfFormatted = cnpj.length === 14 ?
+                        `${cnpj.substring(0,2)}.${cnpj.substring(2,5)}.${cnpj.substring(5,8)}/${cnpj.substring(8,12)}-${cnpj.substring(12,14)}` : 
+                        `${cnpj.substring(0,3)}.${cnpj.substring(3,6)}.${cnpj.substring(6,9)}-${cnpj.substring(9,11)}` %>
+
+                    <tr class="data-row" style="display:table-row;" data-id=<%= item?.id %>>
+                        <td class="p-1 align-content-center"><%= cnpjCpfFormatted %></td>
+                        <td class="p-0 align-content-center"><%= item?.nome_empresa %>
+                            <% if (item?.comment_id && item?.comment_text) { %>
                                 <div 
                                     class="comments"
-                                    data-comment="<%= comment_text %>">
+                                    data-comment="<%= item?.comment_text %>">
                                         <img src="/app-consulta/images/text-box.png">
                                 </div>
                             <% } %>
                         </td>
-                        <td class="td-mun"><%= municipio %></td>
-                        <td class="td-right">
-                            <ul class="status-years">
-                                <% if (no_ccp_number) { %>
-                                    <li class="no-ccp" style="display: flex;">SEM CCP CADASTRADO</li>
-                                    <% if (!statusList.includes("no-ccp")) {statusList.push("no-ccp")} %>
-                                <% } else if (failure) { %>
-                                    <li class="failure" style="display: flex;">FALHA AO BUSCAR DADOS</li>
-                                    <% if (!statusList.includes("failure")) {statusList.push("failure")} %>
+                        <td class="p-0 align-content-center"><%= item?.municipio %></td>
+                        <td class="p-0 align-content-center"><%= cityCodes %></td>
+                        <td class="p-0 align-content-center">
+                            <ul class="my-2">
+                                <% if (item?.no_ccp_number) { %>
+                                    <li class="badge rounded-pill text-bg-secondary m-1 py-1" data-status="SEM CCP">SEM CCP CADASTRADO</li>
+                                <% } else if (item?.failure) { %>
+                                    <li class="badge rounded-pill text-bg-danger m-1 py-1" data-status="FALHA">FALHA AO BUSCAR DADOS</li>
                                 <% } else { %>
-                                    <% if(debits.length > 0) { %>
-                                        <% for (let i = 0; i < debits.length; i++) { %>
-                                            <% const date = debits[i].vencimento.split("-") %>
+                                    <% if(!debits.length > 0) { %>
+                                        <li class="<%= item?.license_sent ? 'sent' : 'no-pendencies' %> badge rounded-pill text-bg-success m-1 py-1"
+                                            data-status='<%= item?.license_sent ? "ENVIADO" : "SEM PENDÊNCIAS" %>'>
+                                            <%= item?.license_sent ? "ENVIADO" : "SEM PENDÊNCIAS" %>
+                                        </li>
+                                    <% } else { %>
+                                        <% for (debit of debits) { %>
+                                            <% const date = debit.vencimento.split("-") %>
                                             <% const formattedDate = date[2] + "/" + date[1] + "/" + date[0] %>
-                                            <% const formattedText = debits[i].receita.replaceAll(".", "").toUpperCase() %>
-                                            <% const duam = debits[i].duam.toString() %>
+                                            <% const formattedText = debit.receita.replaceAll(".", "").toUpperCase() %>
+                                            <% const duam = debit.duam.toString() %>
                                             <li 
-                                                class='<%=duam_sent.includes(duam) ? "pending sent" : "pending" %>'
-                                                style="display: flex;"
-                                                data-content="<%= formattedText + "   " + formattedDate %>"
+                                                class='pending position-relative m-1 py-1 badge rounded-pill text-bg-danger <%=item?.duam_sent.includes(duam) ? "sent" : ""%>'
+                                                data-content='<%= formattedText + "   " + formattedDate %>'
+                                                data-status="PENDENTES"
                                                 data-duam=<%= duam %>>
                                                 <%= formattedText.substring(0, 3) %>
-                                                <% if (!statusList.includes("pending")) {statusList.push("pending")} %>
                                             </li>
                                         <% } %>
-                                    <% } else { %>
-                                        <li class="no-pendencies" style="display: flex;">
-                                            <%= license_sent == 1 ? "ENVIADO" : "SEM PENDÊNCIAS" %>
-                                        </li>
-                                        <% if (!statusList.includes("no-pendencies")) {statusList.push("no-pendencies")} %>
                                     <% } %>
                                 <% } %>
                             </ul>
                         </td>
                     </tr>
                 <% } %>
-                <tr id="no-items" style=<%= results.length !== 0 ? "display:none;" : "display:table-row;"%>>
-                    <td colspan="3">Não há itens para exibir.</td>
+                <tr class="fs-4" id="no-items" style=<%= data.length !== 0 ? "display:none;" : "display:table-row;"%>>
+                    <td colspan="5">Não há itens para exibir.</td>
                 </tr> 
             </tbody>
         </table>
-        <div id="status-filter" style="display: none;">
-            <div class="div-options">
-                <% for (let i = 0; i < statusList.length; i++) { %>
-                    <% const status = statusList[i] %>
-                    <div>
-                        <input 
-                            type="checkbox" value="<%= status %>"
-                            class="status-option" checked="checked"/>
-                        <% if(status === "failure") { %>
-                            <label>FALHA</label>
-                        <% } else if(status === "no-pendencies") { %>
-                            <label>SEM PENDÊNCIAS</label>
-                        <% } else if(status === "pending") { %>
-                            <label>PENDENTES</label>
-                        <% } else if(status === "no-ccp") { %>
-                            <label>SEM CCP</label>
-                        <% } %>
-                    </div>
-                <% } %>
-            </div>
-            <div class="mark-unmark-div">
-                <input type="checkbox" class="mark-unmark" checked="checked"/>
-                <label id="status-mark-unmark-label">DESMARCAR TODOS</label>
-            </div>
-            <div id="status-button">
-                <button type="button" id="status-filter-button">FILTRAR</button>
-            </div>
-        </div>
-        <div id="municipio-filter" style="display: none;">
-            <div class="div-options">
-                <% for (let i = 0; i < municipioList.length; i++) { %>
-                    <% const municipio = municipioList[i] %>
-                    <div>
-                        <input 
-                            type="checkbox" value="<%= municipio %>"
-                            class="municipio-option" checked="checked"/>
-                        <label><%= municipio %></label>
-                    </div>
-                <% } %>
-            </div>
-            <div class="mark-unmark-div">
-                <input type="checkbox" class="mark-unmark" checked="checked"/>
-                <label id="municipio-mark-unmark-label">DESMARCAR TODOS</label>
-            </div>
-            <div id="municipio-button">
-                <button type="button" id="municipio-filter-button">FILTRAR</button>
-            </div>
-        </div>
     </body>
 </html>

@@ -6,8 +6,14 @@ module.exports = function (app) {
         const DAO = new app.app.models.DAO(dbClient)
         const Service = app.app.services.ConsultaCCPService
         try {
-            const data = await Service.getCCP(DAO)
-            res.render('consulta-ccp', { results : data.sort((a, b) => '' + a.nome_empresa.localeCompare(b.nome_empresa)) })
+            const { data, filters } = await Service.getCCP(DAO)
+
+            res.render(
+                'consulta-ccp',
+                { 
+                    data: data.sort((a, b) => '' + a.nome_empresa.localeCompare(b.nome_empresa)),
+                    filters: filters
+                })
             res.status(200).end()
         } catch (e) {
             res.status(400).end(JSON.stringify({error: e?.message ? e.message : "unknown"}))
