@@ -1,6 +1,8 @@
+const authMiddleware = require("../middlewares/auth")
+const DEBUG = false;
+
 module.exports = function (app) {
-    const DEBUG = false;
-    app.get('/cnpjs-crud', async (req, res) => {
+    app.get('/cnpjs-crud', authMiddleware, async (req, res) => {
         const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
@@ -12,7 +14,7 @@ module.exports = function (app) {
         }
     })
 
-    app.put('/cnpjs-crud', async (req, res) => {
+    app.put('/cnpjs-crud', authMiddleware, async (req, res) => {
         const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
@@ -23,7 +25,7 @@ module.exports = function (app) {
         }
     })
     
-    app.put('/cnpjs-crud/toggle-status/', async (req, res) => {
+    app.put('/cnpjs-crud/toggle-status/', authMiddleware, async (req, res) => {
         const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
@@ -34,7 +36,7 @@ module.exports = function (app) {
         }
     })
 
-    app.post('/cnpjs-crud', async (req, res) => {
+    app.post('/cnpjs-crud', authMiddleware, async (req, res) => {
         const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {
@@ -45,7 +47,7 @@ module.exports = function (app) {
         }
     })
 
-    app.delete('/cnpjs-crud', async (req, res) => {
+    app.delete('/cnpjs-crud', authMiddleware, async (req, res) => {
         const dbClient = await app.config.database.databaseConnection.openClient()
         const DAO = new app.app.models.DAO(dbClient)
         try {

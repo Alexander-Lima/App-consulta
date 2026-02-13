@@ -11,3 +11,4 @@
 /copy-db.bat
 /db changes.txt
 /service.js
+/.env
