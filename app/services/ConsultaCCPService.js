@@ -140,7 +140,7 @@ module.exports = function () {
                 filters.status.add("PENDENTES")
                 
             } else if(!item.debits.length) {
-                filters.status.add(item.license_sent ? "ENVIADO" : "SEM PENDÊNCIAS")
+                filters.status.add(item.licenses_sent ? "ENVIADO" : "SEM PENDÊNCIAS")
             }
         })
 
