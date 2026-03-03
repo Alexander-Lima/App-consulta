@@ -88,9 +88,9 @@
                                     <li class="badge rounded-pill text-bg-danger m-1 py-1" data-status="FALHA">FALHA AO BUSCAR DADOS</li>
                                 <% } else { %>
                                     <% if(!debits.length > 0) { %>
-                                        <li class="<%= item?.license_sent ? 'sent' : 'no-pendencies' %> badge rounded-pill text-bg-success m-1 py-1"
-                                            data-status='<%= item?.license_sent ? "ENVIADO" : "SEM PENDÊNCIAS" %>'>
-                                            <%= item?.license_sent ? "ENVIADO" : "SEM PENDÊNCIAS" %>
+                                        <li class="<%= item?.licenses_sent ? 'license_sent' : 'no-pendencies' %> badge rounded-pill text-bg-success m-1 py-1"
+                                            data-status='<%= item?.licenses_sent ? "ENVIADO" : "SEM PENDÊNCIAS" %>'>
+                                            <%= item?.licenses_sent ? "ENVIADO" : "SEM PENDÊNCIAS" %>
                                         </li>
                                     <% } else { %>
                                         <% for (debit of debits) { %>

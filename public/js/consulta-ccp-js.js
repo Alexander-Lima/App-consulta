@@ -5,7 +5,7 @@ window.addEventListener('load', () => {
         registerFilterEvents()
         registerHideFiltersMouseOut()
         registerMarkUnmarkDuam()
-        registerMarkLicenseSent()
+        registerMarkUnmarkLicenseSent()
     }
 )
 
@@ -145,15 +145,15 @@ async function registerMarkUnmarkDuam() {
     })
 }
 
-async function registerMarkLicenseSent() {
-    const elements = document.querySelectorAll(".no-pendencies")
+async function registerMarkUnmarkLicenseSent() {
+    const elements = document.querySelectorAll(".no-pendencies,.license_sent")
 
     elements.forEach(element => {
         element.addEventListener('click', async (event) => {
             const element = event.target
             const elementText = element.innerText
             const id = getParent(element, 3).dataset?.id
-            const isSent = elementText == "ENVIADO"
+            const isSent = elementText === "ENVIADO"
            
             const config = {
                 method: "PUT",

@@ -36,7 +36,7 @@
     border: 2px solid black;
 }
 
-.arrow:hover, .pending, .sent, .no-pendencies {
+.arrow:hover, .pending, .sent, .no-pendencies, .license_sent {
     cursor: pointer !important;
 }
 
