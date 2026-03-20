@@ -1,5 +1,3 @@
-const axios = require('axios').default
-
 module.exports = function (app) {
     app.get('/consulta-ccp', async (req, res) => {
         const dbClient = await app.config.database.databaseConnection.openClient()

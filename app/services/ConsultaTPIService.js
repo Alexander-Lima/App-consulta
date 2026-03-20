@@ -1,6 +1,6 @@
+const util = require('../utilities/util').util
 const axios = require('axios').default
 const formData = require('form-data')
-const util = require('../utilities/util').util
 const error_SEM_REGISTRO = false
 const error_FALHA = false
 

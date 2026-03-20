@@ -1,12 +1,15 @@
 const https = require('https')
 const util = require('../utilities/util').util
 const axios = require('axios')
+const axiosRetry = require('axios-retry').default
 // const Cache = require('../utilities/cache')
 
 module.exports = function () {
     const axiosInstance = axios.create({ 
         httpsAgent: new https.Agent({ rejectUnauthorized: false }) 
     })
+    
+    axiosRetry(axiosInstance, util.getAxiosRetryDefaultConfig())
 
     const baseConfigs = { 
         headers: { 
@@ -50,7 +53,7 @@ module.exports = function () {
         return responseObject;
     }
         
-    async function getData (itemsList) {
+    async function getData(itemsList) {
         let results = []
         const maxPromises = 10
 
@@ -68,7 +71,6 @@ module.exports = function () {
                 return res(null) 
             }
          
-            item['cityCode'] = null
             item['no_ccp_number'] = !item.ccp_number
             item['failure'] = true
             item['duam_sent'] = item.duams ? item.duams : []
@@ -82,8 +84,11 @@ module.exports = function () {
             
             const urlCCP = "https://sig.catalao.go.gov.br/sig/rest/servicoContribuinteController/pesquisarDebitos"
             
-            const respCCP = await axiosInstance.post(urlCCP, { "ccp" : Number(item.ccp_number) }, baseConfigs)
-                                .catch((error) => false)
+            const respCCP = 
+                await axiosInstance
+                    .post(urlCCP, { "ccp" : Number(item.ccp_number) }, baseConfigs)
+                    .catch((error) => false)
+
             if(respCCP.data) {
                 item.debits = respCCP.data?.listaRetorno
                 item.failure = false
@@ -92,12 +97,17 @@ module.exports = function () {
             const urlContributor = 
                 "https://sig.catalao.go.gov.br/sig/rest/servicoContribuinteController/pesquisarContribuintes"
         
-            const respContributor = await axiosInstance.post(urlContributor, { "cnpj": item.cnpj }, baseConfigs)
-                                .catch((error) => false)
-        
+            const respContributor = 
+                await axiosInstance
+                    .post(urlContributor, { "cnpj": item.cnpj }, baseConfigs)
+                    .catch((error) => error)
+
             item.cityCodes = 
-                Array.isArray(respContributor.data) ? 
-                    respContributor.data.filter(item => item.inscricao).map(item => item.inscricao) : []
+                !respContributor.data ?
+                    ["<ERRO>"] :
+                    respContributor.data
+                        .filter(item => item.inscricao)
+                        .map(item => item.inscricao)
             
             res(item)
         })

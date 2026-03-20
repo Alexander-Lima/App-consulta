@@ -1,6 +1,3 @@
-const axios = require('axios').default
-const formData = require('form-data')
-
 module.exports = function (app) {
     app.get('/consulta-tpi', async (req, res) => {
         const dbClient = await app.config.database.databaseConnection.openClient()

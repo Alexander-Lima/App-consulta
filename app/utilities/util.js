@@ -1,3 +1,4 @@
+const axiosRetry = require('axios-retry').default
 module.exports.util = {
     sanitizeCNPJ : function (cnpj) {
         const regex = /^[0-9]{11,14}$/
@@ -22,5 +23,12 @@ module.exports.util = {
             break
         }
         return Promise.all(promisesArray)
-    }
+    },
+
+    getAxiosRetryDefaultConfig: function() {
+        return { 
+            retries: 3,
+            retryCondition: () => true
+        }
+    } 
 }
