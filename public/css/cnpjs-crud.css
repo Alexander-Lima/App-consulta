@@ -342,3 +342,7 @@ form > textarea {
 #button-no {
     background-color: red;
 }
+
+.list-icon {
+    height: 1em;
+}
