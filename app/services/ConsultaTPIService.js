@@ -109,7 +109,7 @@ module.exports = function () {
                 }
                 if(resp.data) {
                     let debitObjects = []
-                    for(debitItem of resp.data) {
+                    for(const debitItem of resp.data) {
                         const { SITUACAO, DATA_VENCIMENTO, ANO_PRESTACAO, REGISTRO_CODIGO_BARRAS, VALOR_TOTAL } = debitItem
                         const debit = {
                             situacao: SITUACAO,

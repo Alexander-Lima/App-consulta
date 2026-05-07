@@ -177,9 +177,11 @@ module.exports = function () {
         async toggleStatus(objArray) {
             const enabled = []
             const disabled = []
-            for(item of objArray) {
+
+            for(const item of objArray) {
                 item.newStatus === 1 ? enabled.push(parseInt(item.id)) : disabled.push(parseInt(item.id))
             }
+
             const placeholdersEnabled = enabled.map((curElement, index) => `$${ index + 1}`).join(",")
             const placeholdersDisabled = disabled.map((curElement, index) => `$${ index + 1}`).join(",")
             const queryEnableStatus = `UPDATE appconsulta.cnpj SET status=1 WHERE id IN (${placeholdersEnabled});`

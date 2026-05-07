@@ -43,7 +43,7 @@ module.exports = function() {
 }
 
 function isOptante(resultElements) {
-    for(element of resultElements) {
+    for(const element of resultElements) {
         if(element.toUpperCase().includes("NÃO OPTANTE")) {
             return false;
         }
