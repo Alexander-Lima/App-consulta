@@ -1,5 +1,5 @@
 window.addEventListener("load", event => {
-    handleClickCards()
+    handleClickCards();
 })
 
 window.addEventListener("pagehide", event => {
@@ -7,7 +7,7 @@ window.addEventListener("pagehide", event => {
 })
 
 function handleClickCards () {
-    const cards = document.querySelectorAll(".card")
+    const cards = document.querySelectorAll(".card");
 
     cards.forEach(item => {
         item.addEventListener('click', async event => {
@@ -17,11 +17,11 @@ function handleClickCards () {
 }
 
 function toggleOverlay(show) {
-    const progressBarOverlay = document.getElementById("overlay")
+    const progressBarOverlay = document.getElementById("overlay");
 
     if(!progressBarOverlay) {
         return;
     }
 
-    progressBarOverlay.style.display= show ? "flex" : "none"
+    progressBarOverlay.style.display= show ? "flex" : "none";
 }
