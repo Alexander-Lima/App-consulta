@@ -22,8 +22,9 @@
     "form-data": "^4.0.0",
     "ip": "^1.1.8",
     "node-windows": "^1.0.0-beta.8",
-    "nodemon": "^2.0.19",
-    "pg": "^8.21.0",
-    "win-ca": "^3.5.1"
+    "pg": "^8.21.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }

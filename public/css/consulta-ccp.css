@@ -110,7 +110,7 @@
 }
 
 .sent::before {
-    content: url(/app-consulta/images/ok.png);
+    content: url(/app-consulta/public/images/ok.png);
     top: -0.5em;
     left: 2em;
     width: 0;

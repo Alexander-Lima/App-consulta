@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import express from 'express'
 import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
@@ -9,14 +8,10 @@ import login from './src/routes/Login.js'
 import tpi from './src/routes/Consulta-tpi.js'
 import ccp from './src/routes/Consulta-ccp.js'
 
-import { Router } from 'express'
-
 const app = express();
-const masterRouter = Router();
 
 app.set('view engine', 'ejs');
 app.set('views', './src/views');
-app.use('/app-consulta', express.static('./public'));
 app.use(session({
     secret: process.env.SESSION_SECRET,
     saveUninitialized: true,
@@ -29,13 +24,11 @@ app.use(cookieParser())
 app.use(bodyParser.json())
 
 // set routes
-masterRouter.use("/", home);
-masterRouter.use("/login", login);
-masterRouter.use("/cnpjs-crud", cnpjsCrud);
-masterRouter.use("/consulta-tpi", tpi);
-masterRouter.use("/consulta-ccp", ccp);
-
-app.use("/app-consulta", masterRouter);
+app.use("/", home);
+app.use("/login", login);
+app.use("/cnpjs-crud", cnpjsCrud);
+app.use("/consulta-tpi", tpi);
+app.use("/consulta-ccp", ccp);
 
 export default app;  
  
