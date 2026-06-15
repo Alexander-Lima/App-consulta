@@ -2,7 +2,6 @@ import https from 'node:https'
 import { getAxiosRetryDefaultConfig, getPromisesArray } from '../utilities/util.js'
 import axios from 'axios'
 import axiosRetry from 'axios-retry'
-import DAO from '../models/DAO.js'
 // import Cache from '../utilities/cache.js'
 
 const axiosInstance = axios.create({ 
@@ -19,16 +18,14 @@ const baseConfigs = {
     }
 }
 
-async function getCCP() {
+async function getCCP(ccpList) {
     // const cache = new Cache();
     // const cachedData = await cache.get("ccp");
     // if(cachedData) {
     //     return cachedData;
     // }
 
-    const results = await DAO.getAllJoinCCP();
-
-    if(!results) { 
+    if(!ccpList) { 
         throw new Error("Falha no Banco de Dados!");
     }
 
@@ -38,7 +35,7 @@ async function getCCP() {
         throw new Error("Falha ao gerar JWT!");
     }
     
-    const data = await getData(results);
+    const data = await getData(ccpList);
     
     if(!data) { 
         throw new Error("Falha na busca de CCP!");
@@ -159,4 +156,4 @@ function createFilters(data) {
     return filters;
 }
 
-export default getCCP;
+export { getCCP };

@@ -1,9 +1,9 @@
 import { compare } from 'bcrypt';
-import DAO from '../models/DAO.js'
+import getUserPasswordHash from '../respositories/auth.js'
 
 export default async function (user, pass) {
     return new Promise(async (res) => {
-        const resp  = await DAO.getUserPasswordHash(user);
+        const resp  = await getUserPasswordHash(user);
 
         if(!resp) {
             return res(false);

@@ -7,8 +7,11 @@ import home from './src/routes/Home.js'
 import login from './src/routes/Login.js'
 import tpi from './src/routes/Consulta-tpi.js'
 import ccp from './src/routes/Consulta-ccp.js'
+// import { Router } from 'express'
+import authMiddleware from './src/middlewares/auth.js'
 
 const app = express();
+// const router = Router();
 
 app.set('view engine', 'ejs');
 app.set('views', './src/views');
@@ -17,7 +20,7 @@ app.use(session({
     saveUninitialized: true,
     cookie: { maxAge: Number(process.env.SESSION_EXPIRE_TIME_MS) },
     resave: false
-}))
+}));
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser())
@@ -26,9 +29,22 @@ app.use(bodyParser.json())
 // set routes
 app.use("/", home);
 app.use("/login", login);
-app.use("/cnpjs-crud", cnpjsCrud);
+app.use("/cnpjs-crud", authMiddleware, cnpjsCrud);
 app.use("/consulta-tpi", tpi);
 app.use("/consulta-ccp", ccp);
+
+// for local
+// ####################
+// app.use("/app-consulta/public", express.static('public'))
+
+// router.use("/", home);
+// router.use("/login", login);
+// router.use("/cnpjs-crud", authMiddleware, cnpjsCrud);
+// router.use("/consulta-tpi", tpi);
+// router.use("/consulta-ccp", ccp);
+
+// app.use("/app-consulta", router)
+// ####################
 
 export default app;  
  
