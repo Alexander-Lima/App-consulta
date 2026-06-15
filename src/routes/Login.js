@@ -1,40 +1,15 @@
 import { Router } from 'express'
-import DAO from '../models/DAO.js'
-import auth from '../services/AuthenticationService.js'
-import { standardJsonError } from '../utilities/util.js';
+import { renderLogin, authenticate, renderError, logout } from '../controllers/login.js'
+import { standardJsonError } from '../utilities/util.js'
 
 const router = Router();
 
-router.get("/", (req, res) => {
-    res.render("login");
-})
+router.get("/", renderLogin);
 
-router.post("/", async (req, res) => {
-    const { user, pass } = req.body;
+router.post("/", authenticate);
 
-    try {
-        const authenticationResult = await auth(user, pass);
+router.get('/erro', renderError)
 
-        if (authenticationResult) {
-            req.session.userId = user;
-            res.redirect("/app-consulta/cnpjs-crud");
-
-        } else {
-            res.status(400).render("login-erro");
-        }
-
-    } catch (e){
-        return standardJsonError(res, e);
-    }
-})
-
-router.get('/erro', (req, res) => {
-    res.render("login-erro");
-})
-
-router.get('/out', (req, res) => {
-    req.session?.destroy();
-    res.redirect("/app-consulta");
-})
+router.get('/out', logout);
 
 export default router;

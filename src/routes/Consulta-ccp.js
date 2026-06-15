@@ -1,59 +1,15 @@
 import { Router } from 'express'
-import DAO from '../models/DAO.js'
-import getCCP from '../services/ConsultaCCPService.js';
-import { standardJsonError } from '../utilities/util.js';
+import { standardJsonError } from '../utilities/util.js'
+import { getCCPData, insertSentDuamCCP, setLicensesSentCCP, deleteSentDuamCCP } from '../controllers/consulta-ccp.js';
 
 const router = Router();
 
-router.get('/', async (req, res) => {
-    try {
-        const { data, filters } = await getCCP();
+router.get('/', getCCPData);
 
-        res.render(
-            'consulta-ccp',
-            { 
-                data: data.sort((a, b) => '' + a.nome_empresa.localeCompare(b.nome_empresa)),
-                filters: filters
-            });
+router.post('/', insertSentDuamCCP);
 
-    } catch (e) {
-        return standardJsonError(res, e);
-    }
-})
+router.put('/', setLicensesSentCCP);
 
-router.post('/', async (req, res) => {
-    try {
-        await DAO.insertSentDuam(req.body);
-        res.status(201).end();
-
-    } catch (e) {
-        return standardJsonError(res, e);
-    }
-})
-
-router.put('/', async (req, res) => {
-    try {
-        const { id, licenseSent } = req.query;
-        if(id && licenseSent) {
-            await DAO.setLicensesSent(id, licenseSent);
-            return res.status(200).end();
-        }
-
-        return res.status(400).end("Parâmetros da requisição incorretos!");
-
-    } catch (e) {
-         return standardJsonError(res, e);
-    }
-})
-
-router.delete('/', async (req, res) => {
-    try {
-        await DAO.deleteSentDuam(req.body);
-        res.end();
-        
-    } catch (e) {
-         return standardJsonError(res, e);
-    }
-})
+router.delete('/', deleteSentDuamCCP);
 
 export default router;

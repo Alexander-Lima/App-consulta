@@ -4,7 +4,6 @@ import { getPromisesArray } from '../utilities/util.js'
 const error_SEM_REGISTRO = false;
 const error_FALHA = false;
 
-
 export default async function getTPI(dbItems) {
     return new Promise (async (res, rej) => {
         let cnpjDataArray = [];
