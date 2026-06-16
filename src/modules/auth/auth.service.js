@@ -1,5 +1,5 @@
 import { compare } from 'bcrypt';
-import getUserPasswordHash from '../respositories/auth.js'
+import getUserPasswordHash from './auth.respository.js'
 
 export default async function (user, pass) {
     return new Promise(async (res) => {

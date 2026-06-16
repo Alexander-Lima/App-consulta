@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import renderHome from '../controllers/home.js';
+import renderHome from './home.controller.js';
 
 const router = Router();
 

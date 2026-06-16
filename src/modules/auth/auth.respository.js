@@ -1,4 +1,4 @@
-import db from '../../config/db.js'
+import db from '../../../config/db.js'
 
 export default async function getUserPasswordHash(user) {
     const queryGetUser = "SELECT * FROM appconsulta.users WHERE name= $1;"

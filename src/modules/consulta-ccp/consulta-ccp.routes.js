@@ -1,7 +1,5 @@
 import { Router } from 'express'
-import { standardJsonError } from '../utilities/util.js'
-import { getCCPData, insertSentDuamCCP, setLicensesSentCCP, deleteSentDuamCCP } from '../controllers/consulta-ccp.js';
-
+import { getCCPData, insertSentDuamCCP, setLicensesSentCCP, deleteSentDuamCCP } from './consulta-ccp.controller.js'
 const router = Router();
 
 router.get('/', getCCPData);

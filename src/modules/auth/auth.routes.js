@@ -1,6 +1,5 @@
 import { Router } from 'express'
-import { renderLogin, authenticate, renderError, logout } from '../controllers/login.js'
-import { standardJsonError } from '../utilities/util.js'
+import { renderLogin, authenticate, renderError, logout } from './auth.controller.js'
 
 const router = Router();
 

@@ -1,5 +1,5 @@
-import { normalizeName, sanitizeCNPJ } from '../utilities/util.js'
-import db from '../../config/db.js'
+import { normalizeName, sanitizeCNPJ } from '../../utilities/util.js'
+import db from '../../../config/db.js'
 
 async function getAllJoinCCP() {
     const query = `SELECT cnpj.id, cnpj.status, cnpj.cnpj, cnpj.nome_empresa, cnpj.status, cnpj.comment_id, cnpj.municipio, 

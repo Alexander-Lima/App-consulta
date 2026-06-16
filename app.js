@@ -2,19 +2,18 @@ import express from 'express'
 import bodyParser from 'body-parser'
 import cookieParser from 'cookie-parser'
 import session from 'express-session'
-import cnpjsCrud from './src/routes/Cnpjs-crud.js'
-import home from './src/routes/Home.js'
-import login from './src/routes/Login.js'
-import tpi from './src/routes/Consulta-tpi.js'
-import ccp from './src/routes/Consulta-ccp.js'
-// import { Router } from 'express'
-import authMiddleware from './src/middlewares/auth.js'
+import cnpjs from './src/modules/cnpjs/cnpjs.routes.js'
+import home from './src/modules/home/home.routes.js'
+import auth from './src/modules/auth/auth.routes.js'
+import tpi from './src/modules/consulta-tpi/consulta-tpi.routes.js'
+import ccp from './src/modules/consulta-ccp/consulta-ccp.routes.js'
+import authMiddleware from './src/middlewares/auth.middleware.js'
+import { Router } from 'express'
 
 const app = express();
-// const router = Router();
+const router = Router();
 
 app.set('view engine', 'ejs');
-app.set('views', './src/views');
 app.use(session({
     secret: process.env.SESSION_SECRET,
     saveUninitialized: true,
@@ -28,8 +27,8 @@ app.use(bodyParser.json())
 
 // set routes
 app.use("/", home);
-app.use("/login", login);
-app.use("/cnpjs-crud", authMiddleware, cnpjsCrud);
+app.use("/login", auth);
+app.use("/cnpjs-crud", authMiddleware, cnpjs);
 app.use("/consulta-tpi", tpi);
 app.use("/consulta-ccp", ccp);
 
@@ -38,8 +37,8 @@ app.use("/consulta-ccp", ccp);
 // app.use("/app-consulta/public", express.static('public'))
 
 // router.use("/", home);
-// router.use("/login", login);
-// router.use("/cnpjs-crud", authMiddleware, cnpjsCrud);
+// router.use("/login", auth);
+// router.use("/cnpjs-crud", authMiddleware, cnpjs);
 // router.use("/consulta-tpi", tpi);
 // router.use("/consulta-ccp", ccp);
 

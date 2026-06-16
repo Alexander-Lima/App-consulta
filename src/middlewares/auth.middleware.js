@@ -6,7 +6,7 @@ export default function auth(req, res, next) {
     }
 
     if(req.method === "GET" ) {
-        return res.redirect("/app-consulta/login");
+        return res.redirect("login");
     }
 
     return res.status(400).end("Usuário não está logado!");

@@ -1,7 +1,8 @@
 import https from 'node:https'
-import { getAxiosRetryDefaultConfig, getPromisesArray } from '../utilities/util.js'
+import { getAxiosRetryDefaultConfig, getPromisesArray } from '../../utilities/util.js'
 import axios from 'axios'
 import axiosRetry from 'axios-retry'
+import { getAllJoinCCP, insertSentDuam, setLicensesSent, deleteSentDuam } from './consulta-ccp.respository.js'
 // import Cache from '../utilities/cache.js'
 
 const axiosInstance = axios.create({ 
@@ -40,6 +41,8 @@ async function getCCP(ccpList) {
     if(!data) { 
         throw new Error("Falha na busca de CCP!");
     }
+
+    data.sort((a, b) => '' + a.nome_empresa.localeCompare(b.nome_empresa));
     
     const responseObject = {
         data: data,
@@ -156,4 +159,21 @@ function createFilters(data) {
     return filters;
 }
 
-export { getCCP };
+async function getAllService() {
+    const ccpList = await getAllJoinCCP();
+    return await getCCP(ccpList);
+}
+
+async function insertSentDuamService(data) {
+    return await insertSentDuam(data);
+}
+
+async function setLicenseSentService(id, licenseSent) {
+    return await setLicensesSent(id, licenseSent);
+}
+
+async function deleteSentDuamService(data) {
+    return await deleteSentDuam(data);
+}
+
+export { getCCP, getAllService, insertSentDuamService, setLicenseSentService, deleteSentDuamService };
