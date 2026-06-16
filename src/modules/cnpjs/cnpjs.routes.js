@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { listCNPJ, update, toggleStatus, insert, deleteItems } from '../controllers/cnpjs-crud.js';
+import { listCNPJ, update, toggleStatus, insert, deleteItems } from './cnpjs.controller.js';
 
 const router = Router();
 

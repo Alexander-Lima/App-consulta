@@ -1,10 +1,11 @@
 import FormData from 'form-data'
 import axios from 'axios'
-import { getPromisesArray } from '../utilities/util.js'
+import { getPromisesArray } from '../../utilities/util.js'
+import { getCnpjJoinTPI, getAllJoinTPI, insertSentYearTPI, deleteSentYearTPI } from './consulta-tpi.respository.js'
 const error_SEM_REGISTRO = false;
 const error_FALHA = false;
 
-export default async function getTPI(dbItems) {
+async function getTPI(dbItems) {
     return new Promise (async (res, rej) => {
         let cnpjDataArray = [];
         let resultArray = [];
@@ -145,4 +146,22 @@ export default async function getTPI(dbItems) {
         })
     }
 }
+
+async function getAllService() {
+    return await getTPI(await getAllJoinTPI());
+}
+
+async function getByIdService(id) {
+    return await getTPI(await getCnpjJoinTPI(id));
+}
+
+async function insertSentYearService(data) {
+    return await insertSentYearTPI(data);
+}
+
+async function deleteSentYearService(data) {
+    return await deleteSentYearTPI(data);
+}
+
+export { getByIdService, getAllService, insertSentYearService, deleteSentYearService }
 

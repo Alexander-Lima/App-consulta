@@ -1,6 +1,5 @@
 import { Router } from 'express'
-import { standardJsonError } from '../utilities/util.js'
-import { getAllTPI, insertSentYear, deleteSentYear } from '../controllers/consulta-tpi.js';
+import { getAllTPI, insertSentYear, deleteSentYear } from './consulta-tpi.controller.js';
 
 const router = Router();
 

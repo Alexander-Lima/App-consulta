@@ -1,8 +1,8 @@
-import { standardJsonError } from '../utilities/util.js'
-import authService from '../services/authenticationService.js'
+import { standardJsonError } from '../../utilities/util.js'
+import authService from './auth.service.js'
 
 function renderLogin(req, res) {
-    res.render("login");
+    res.render(import.meta.dirname + "/views/login");
 }
 
 async function authenticate(req, res) {
@@ -25,12 +25,12 @@ async function authenticate(req, res) {
 }
 
 function renderError(req, res) {
-    res.render("login-erro");
+    res.render(import.meta.dirname + "/views/login-erro");
 }
 
 function logout(req, res) {
     req.session?.destroy();
-    res.redirect(".");
+    res.redirect("/app-consulta");
 }
 
 export { renderLogin, authenticate, renderError, logout }

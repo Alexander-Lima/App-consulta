@@ -1,4 +1,4 @@
-import db from '../../config/db.js'
+import db from '../../../config/db.js'
 
 async function getCnpjJoinTPI(id) {
     const query = `SELECT cnpj.id, cnpj.status, cnpj.cnpj, cnpj.nome_empresa, cnpj.municipio, cnpj.comment_id,
