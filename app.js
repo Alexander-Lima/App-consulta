@@ -11,7 +11,6 @@ import authMiddleware from './src/middlewares/auth.middleware.js'
 import { Router } from 'express'
 
 const app = express();
-const router = Router();
 
 app.set('view engine', 'ejs');
 app.use(session({
@@ -22,28 +21,36 @@ app.use(session({
 }));
 
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(cookieParser())
-app.use(bodyParser.json())
+app.use(cookieParser());
+app.use(bodyParser.json());
 
-// set routes
-app.use("/", home);
-app.use("/login", auth);
-app.use("/cnpjs-crud", authMiddleware, cnpjs);
-app.use("/consulta-tpi", tpi);
-app.use("/consulta-ccp", ccp);
+if(process.env.LOCAL == 'true') {
+    setLocalRoutes();
+    
+} else {
+    setRoutes();
+}
 
-// for local
-// ####################
-// app.use("/app-consulta/public", express.static('public'))
+function setLocalRoutes() {
+    const router = Router();
+    app.use("/app-consulta/public", express.static('public'))
+    
+    router.use("/", home);
+    router.use("/login", auth);
+    router.use("/cnpjs-crud", authMiddleware, cnpjs);
+    router.use("/consulta-tpi", tpi);
+    router.use("/consulta-ccp", ccp);
+    
+    app.use("/app-consulta", router)
+}
 
-// router.use("/", home);
-// router.use("/login", auth);
-// router.use("/cnpjs-crud", authMiddleware, cnpjs);
-// router.use("/consulta-tpi", tpi);
-// router.use("/consulta-ccp", ccp);
-
-// app.use("/app-consulta", router)
-// ####################
+function setRoutes() {
+    app.use("/", home);
+    app.use("/login", auth);
+    app.use("/cnpjs-crud", authMiddleware, cnpjs);
+    app.use("/consulta-tpi", tpi);
+    app.use("/consulta-ccp", ccp);
+}
 
 export default app;  
  
