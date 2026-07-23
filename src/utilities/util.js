@@ -1,3 +1,6 @@
+import fs from 'fs';
+import path from 'path';
+
 function sanitizeCNPJ(cnpj) {
     const regex = /^[0-9]{11,14}$/;
     
@@ -35,5 +38,25 @@ function standardJsonError(res, errorObject) {
     return res.status(400).end(JSON.stringify({error: errorObject?.message ? errorObject.message : "unknown"}));
 }
 
-export { sanitizeCNPJ, normalizeName, getPromisesArray, getAxiosRetryDefaultConfig, standardJsonError }
+function sleep(delayMS) {
+    return new Promise(res => setTimeout(() => res(), delayMS));
+}
+
+function logToFile(message) {
+    const time = new Date(Date.now());
+    fs.appendFile(
+        process.env.LOG_PATH, `${time.toLocaleDateString()} - ${time.toLocaleTimeString()} -> ${message}\n`, 
+        (err) => {}
+    );
+}
+
+export { 
+    sanitizeCNPJ,
+    normalizeName,
+    getPromisesArray,
+    getAxiosRetryDefaultConfig,
+    standardJsonError,
+    sleep,
+    logToFile 
+}
 

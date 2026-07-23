@@ -8,6 +8,7 @@ import auth from './src/modules/auth/auth.routes.js'
 import tpi from './src/modules/consulta-tpi/consulta-tpi.routes.js'
 import ccp from './src/modules/consulta-ccp/consulta-ccp.routes.js'
 import authMiddleware from './src/middlewares/auth.middleware.js'
+import relatorioCnpj from './src/modules/relatorio-cnpj/relatorio-cnpj.routes.js'
 import { Router } from 'express'
 
 const app = express();
@@ -40,6 +41,7 @@ function setLocalRoutes() {
     router.use("/cnpjs-crud", authMiddleware, cnpjs);
     router.use("/consulta-tpi", tpi);
     router.use("/consulta-ccp", ccp);
+    router.use("/relatorio-cnpj", relatorioCnpj);
     
     app.use("/app-consulta", router)
 }
@@ -50,6 +52,7 @@ function setRoutes() {
     app.use("/cnpjs-crud", authMiddleware, cnpjs);
     app.use("/consulta-tpi", tpi);
     app.use("/consulta-ccp", ccp);
+    app.use("/relatorio-cnpj", relatorioCnpj);
 }
 
 export default app;  
