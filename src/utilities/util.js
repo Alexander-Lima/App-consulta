@@ -50,6 +50,13 @@ function logToFile(message) {
     );
 }
 
+function getToday() {
+    const date = new Date(Date.now());
+    date.setHours(12, 0, 0, 0);
+
+    return date;
+}
+
 export { 
     sanitizeCNPJ,
     normalizeName,
@@ -57,6 +64,7 @@ export {
     getAxiosRetryDefaultConfig,
     standardJsonError,
     sleep,
-    logToFile 
+    logToFile,
+    getToday 
 }
 
