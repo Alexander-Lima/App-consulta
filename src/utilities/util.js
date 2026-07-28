@@ -57,6 +57,13 @@ function getToday() {
     return date;
 }
 
+function replaceLast(string, search, replacement) {
+  const index = string.lastIndexOf(search);
+
+  if (index === -1) return string;
+  return `${string.slice(0, index)}${replacement}${string.slice(index + search.length)}`;
+}
+
 export { 
     sanitizeCNPJ,
     normalizeName,
@@ -65,6 +72,7 @@ export {
     standardJsonError,
     sleep,
     logToFile,
-    getToday 
+    getToday,
+    replaceLast
 }
 

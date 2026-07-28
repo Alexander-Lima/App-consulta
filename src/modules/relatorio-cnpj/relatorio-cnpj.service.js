@@ -1,9 +1,10 @@
 import axios from 'axios';
-import { sleep, logToFile, getToday } from '../../utilities/util.js';
+import { sleep, logToFile, getToday, replaceLast } from '../../utilities/util.js';
+import { Mailer } from '../../classes/mailer.js';
 
 const MAX_RETRIES = 3;
 const DELAY_MS = 30000; 
-const AXIOS_TIMEOUT = 5000;
+const AXIOS_TIMEOUT = 30000;
 const axioClient = axios.create({ validateStatus: () => true, timeout: AXIOS_TIMEOUT });
 
 async function update() {
@@ -22,7 +23,6 @@ async function update() {
     await processClients(clients, nextBatchDate);
 
     if(isReportDay()) {
-        // generateReport(clients.filter(e => e.CNPJ == " 43932601000145"));
         generateReport(clients);
     }
 
@@ -48,16 +48,37 @@ async function saveData(id, data, nextBatchDate) {
 }
 
 async function getApiData(id, retries = 0) {
-    const res =  await axioClient.get(`https://open.cnpja.com/office/${id?.replaceAll(" ", "")}`).catch(err => false);
+    let res = {};
+
+    if(process.env.ENABLE_CNPJJA_API_KEY == "true" && process.env.CNPJJA_API_KEY) {
+        const auth = { Authorization: process.env.CNPJJA_API_KEY };
+
+        res =  await axioClient.get(
+            `https://api.cnpja.com/office/asda${id?.replaceAll(" ", "")}` + 
+            "?simples=true&registrations=ORIGIN&maxAge=2", { headers: auth }).catch(err => false);
+    } else {
+        res =  await axioClient.get(`https://open.cnpja.com/office/${id?.replaceAll(" ", "")}`).catch(err => false);
+    }
 
     if(retries >= MAX_RETRIES) {
-        return { error: `Máximo de tentativas excedido para CNPJ${id}` }
+        return { error: `Máximo de tentativas excedido para CNPJ${id}` };
     }
 
     if(res.status !== 200) {
-        logToFile(`Erro na api CNPJ Já, tentando novamente para ` + 
-        `o CNPJ${id} em ${ DELAY_MS / 1000 }s [${ retries + 1 }].`);
-        await sleep(DELAY_MS);
+        if(res.status !== 429) {
+            const message = res?.data?.message ? ` [${res.data.message}]` : "";
+            logToFile(`Erro na api CNPJ Já, erro desconhecido com código ${ res.status }${ message }.` + 
+            ` Tentando novamente para o CNPJ${id} em ${ DELAY_MS / 1000 }s [${ retries + 1 }].`);
+
+        } else if(res?.data?.message == "rate limit exceeded") {
+            logToFile(`Erro na api CNPJ Já, número de tentativas por minuto excedido. ` + 
+            `Tentando novamente para o CNPJ${id} em ${ DELAY_MS / 1000 }s [${ retries + 1 }].`);
+
+        } else if(res?.data?.message == "not enough credits") {
+            return { error: `Erro na api CNPJ Já, créditos insuficientes para a pesquisa do CNPJ${id}.` };
+        } 
+
+        // await sleep(DELAY_MS);
         return await getApiData(id, ++retries);
     }
 
@@ -71,7 +92,8 @@ async function processClients(clients, nextBatchDate) {
     
     for(const client of clients) {
         const savedBatchDate = new Date(client?.DETAILS?.batchDate || null);
-        const isExpired = savedBatchDate.getTime() != nextBatchDate.getTime();
+        // const isExpired = savedBatchDate.getTime() != nextBatchDate.getTime();
+        const isExpired = true;
         
         if(!isExpired) {
             continue;
@@ -81,25 +103,26 @@ async function processClients(clients, nextBatchDate) {
         
         logToFile(error || `Busca concluída para o CNPJ${client.CNPJ}.`);
 
-        const { success } = await saveData(client.ID, data || "\"batchDate\":\"null\"}", nextBatchDate);
+        if(data) {
+            const { success } = await saveData(client.ID, data || "\"batchDate\":\"null\"}", nextBatchDate);
+            logToFile(
+                success ? 
+                `Dados do CNPJ${client.CNPJ} gravado no banco de dados.` :
+                "Falha ao gravar no banco de dados."
+            );
 
-        logToFile(
-            success ? 
-            `Dados do CNPJ${client.CNPJ} gravado no banco de dados.` :
-            "Falha ao gravar no banco de dados."
-        );
-
-        if(data && !client.DETAILS) {
-            client['DETAILS'] = data;
+            if(!client.DETAILS) {
+                client['DETAILS'] = data;
+            }
         }
     }
 }
 
 function isReportDay() {
     const currentDate = getToday();
-    const allowedDays = JSON.parse(process.env.ALLOWED_UPDATE_CNPJJA_DAYS);
+    const allowedDays = getParsedDaysEnv();
 
-    return allowedDays.includes(currentDate.getDate())
+    return allowedDays ? allowedDays.includes(currentDate.getDate()) : null;
 }
 
 async function getAllActiveClients() {
@@ -124,7 +147,20 @@ async function generateReport(clients) {
         }
     });
 
-    return errorsFound;
+    if(!errorsFound.length) {
+        return;
+    }
+
+    const HEADER = "<p>Seguem abaixo as pendências encontradas na última verificação:</p>\n"
+    const fomattedErrors = 
+        errorsFound.map(({ id, name, errors }) => 
+            `<strong>${id} | ${name}</strong>:` + 
+            `<ul>${ errors.map(e => `<li>${e}</li>`).join("") }</ul>`)?.join("");
+
+    (new Mailer(
+        "Relatório de pendências",
+        `${HEADER}${replaceLast(fomattedErrors, ";", ".")}`)).sendEmail();
+
 }
 
 function getErrors(client) {
@@ -144,7 +180,7 @@ function getErrors(client) {
 
     if(!DETAILS) {
         companyReport.errors.push("A busca dos dados da empresa não foi concluída " + 
-        "na API CNPJ JÁ, verifique os logs do sistema.");
+        "na API CNPJ JÁ, verifique os logs do sistema;");
         return companyReport;
     }
 
@@ -161,7 +197,7 @@ function getErrors(client) {
 
     if(REGIME != currentRegime) {
         companyReport.errors.push(`Divergência de regime tributário entre a domínio [${REGIME}] `+ 
-        `e Receita Federal [${currentRegime}]`);
+        `e Receita Federal [${currentRegime}];`);
     }
 
     if(status != "ATIVA") {
@@ -172,7 +208,7 @@ function getErrors(client) {
             
         if(!isParalyzed) {
             companyReport.errors.push(`A empresa não está ativa na Receita Federal ` + 
-            `[status atual: ${status} - Motivo: ${DETAILS?.reason?.text}]`);
+            `[status atual: ${status} - Motivo: ${DETAILS?.reason?.text}];`);
         }
     }
 
@@ -180,7 +216,7 @@ function getErrors(client) {
         [...DETAILS.registrations]
             .filter(ie => !ie.enabled)
             .forEach(ie => companyReport.errors.push(`A inscrição estadual ` + 
-            `${ie.number} (${ie.state}) não está habilitada. Motivo: ${ie?.status?.text}`))
+            `${ie.number} (${ie.state}) não está habilitada;`))
     }
 
     return companyReport;
@@ -188,7 +224,7 @@ function getErrors(client) {
 
 function getParsedDaysEnv() {
     try {
-        const allowedDays = JSON.parse(process.env.ALLOWED_UPDATE_CNPJJA_DAYS);
+        const allowedDays = JSON.parse(process.env.ALLOWED_REPORT_DAYS);
 
         return allowedDays;
 
