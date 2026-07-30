@@ -57,6 +57,15 @@ function getToday() {
     return date;
 }
 
+function getParsedDaysEnv() {
+    try {
+        return JSON.parse(process.env.ALLOWED_REPORT_DAYS);
+
+    } catch (error) {
+       return null; 
+    }
+}
+
 function replaceLast(string, search, replacement) {
   const index = string.lastIndexOf(search);
 
@@ -73,6 +82,7 @@ export {
     sleep,
     logToFile,
     getToday,
-    replaceLast
+    replaceLast,
+    getParsedDaysEnv
 }
 

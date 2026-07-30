@@ -1,11 +1,13 @@
 import axios from 'axios';
-import { sleep, logToFile, getToday, replaceLast } from '../../utilities/util.js';
+import { sleep, logToFile, getToday, replaceLast, getParsedDaysEnv } from '../../utilities/util.js';
 import { Mailer } from '../../classes/mailer.js';
 
 const MAX_RETRIES = 3;
 const DELAY_MS = 30000; 
 const AXIOS_TIMEOUT = 30000;
-const axioClient = axios.create({ validateStatus: () => true, timeout: AXIOS_TIMEOUT });
+const axioClient = axios.create({ timeout: AXIOS_TIMEOUT });
+const isOfficialApi = 
+    process.env.ENABLE_CNPJJA_API_KEY == "true" && process.env.CNPJJA_API_KEY;
 
 async function update() {
     const nextBatchDate = getNextBatchDate();
@@ -30,59 +32,63 @@ async function update() {
 }
 
 async function saveData(id, data, nextBatchDate) {
-    const warning = "***NÃO MODIFIQUE ESTA ABA! EM CASO DE DÚVIDAS, FALE COM O ALEX.***\r\n\r\n";
     data['batchDate'] = nextBatchDate.toISOString();
 
     const payload = {
         "id": id,
-        "details": `${warning}${JSON.stringify(data)}`
+        "details": JSON.stringify(data)
     };
 
-    const res = await axios.put("http://192.168.1.203/php/json/empresas", payload).catch(err => false);
-
-    if(res?.status == 200) {
-        return { success: true };
-    }
+    const res = await axios.put("http://192.168.1.203/php/json/empresas", payload).catch(err => err);
     
-    return { error: true };
+    return res?.status == 200;
 }
 
 async function getApiData(id, retries = 0) {
-    let res = {};
-
-    if(process.env.ENABLE_CNPJJA_API_KEY == "true" && process.env.CNPJJA_API_KEY) {
-        const auth = { Authorization: process.env.CNPJJA_API_KEY };
-
-        res =  await axioClient.get(
-            `https://api.cnpja.com/office/asda${id?.replaceAll(" ", "")}` + 
-            "?simples=true&registrations=ORIGIN&maxAge=2", { headers: auth }).catch(err => false);
-    } else {
-        res =  await axioClient.get(`https://open.cnpja.com/office/${id?.replaceAll(" ", "")}`).catch(err => false);
-    }
+    const res = await callApi(id);
 
     if(retries >= MAX_RETRIES) {
         return { error: `Máximo de tentativas excedido para CNPJ${id}` };
     }
 
-    if(res.status !== 200) {
-        if(res.status !== 429) {
-            const message = res?.data?.message ? ` [${res.data.message}]` : "";
-            logToFile(`Erro na api CNPJ Já, erro desconhecido com código ${ res.status }${ message }.` + 
-            ` Tentando novamente para o CNPJ${id} em ${ DELAY_MS / 1000 }s [${ retries + 1 }].`);
-
-        } else if(res?.data?.message == "rate limit exceeded") {
-            logToFile(`Erro na api CNPJ Já, número de tentativas por minuto excedido. ` + 
-            `Tentando novamente para o CNPJ${id} em ${ DELAY_MS / 1000 }s [${ retries + 1 }].`);
-
-        } else if(res?.data?.message == "not enough credits") {
-            return { error: `Erro na api CNPJ Já, créditos insuficientes para a pesquisa do CNPJ${id}.` };
-        } 
-
-        // await sleep(DELAY_MS);
-        return await getApiData(id, ++retries);
+    if(!axios.isAxiosError(res)) {
+        return { data: res.data };
     }
 
-    return { data: res.data };
+    if(res?.response?.status !== 200) {
+        return await logErrorsAndRetry(res, id, retries);
+    }
+}
+
+function callApi(id) {
+    if(isOfficialApi) {
+        const auth = { Authorization: process.env.CNPJJA_API_KEY };
+
+        return axioClient.get(
+            `https://api.cnpja.com/office/${id?.replaceAll(" ", "")}` + 
+            "?simples=true&registrations=ORIGIN&maxAge=3", { headers: auth }).catch(err => err);
+    } else {
+        return axioClient.get(`https://open.cnpja.com/office/${id?.replaceAll(" ", "")}`).catch(err => err);
+    }
+}
+
+async function logErrorsAndRetry(res, id, retries) {
+    if(!res.response) {
+        logToFile(`Erro na chamada da api CNPJ Já. Mensagem: ${ res.message }. ` + 
+        `Tentando novamente para o CNPJ${id} em ${ DELAY_MS / 1000 }s [${ retries + 1 }].`);
+    
+    } else if(res.response.data?.message == "not enough credits") {
+        return { error: `Erro na api CNPJ Já, créditos insuficientes para a pesquisa do CNPJ${id}.` };
+
+    } else {
+        logToFile(`Erro na resposta da api CNPJ Já. ` + 
+        `Status: [${res.response?.status || -1 }] ${res.response.data?.message || "vazio" }. ` +
+        `Tentando novamente para o CNPJ${id} em ${ DELAY_MS / 1000 }s [${ retries + 1 }].`);
+    } 
+
+    await sleep(DELAY_MS);
+
+    return await getApiData(id, ++retries);
 }
 
 async function processClients(clients, nextBatchDate) {
@@ -101,10 +107,12 @@ async function processClients(clients, nextBatchDate) {
 
         const { data, error } = await getApiData(client.CNPJ);
         
-        logToFile(error || `Busca concluída para o CNPJ${client.CNPJ}.`);
+        logToFile(error || `Busca concluída para o CNPJ${client.CNPJ}` + 
+            ` na API ${ isOfficialApi ? "oficial" : "gratuita"}.` );
 
         if(data) {
-            const { success } = await saveData(client.ID, data || "\"batchDate\":\"null\"}", nextBatchDate);
+            const success = await saveData(client.ID, data, nextBatchDate);
+
             logToFile(
                 success ? 
                 `Dados do CNPJ${client.CNPJ} gravado no banco de dados.` :
@@ -126,14 +134,9 @@ function isReportDay() {
 }
 
 async function getAllActiveClients() {
-    const resp = await axioClient.get("http://192.168.1.203/php/json/empresas/ativa").catch(err => false);
+    const res = await axioClient.get("http://192.168.1.203/php/json/empresas/ativa").catch(err => err);
 
-    if(resp?.status !== 200) {
-        logToFile("Falha ao buscar dados na api interna.");
-        return null;
-    }
-
-    return resp.data?.data;
+    return res?.status == 200 ? res.data?.data : null;
 }
 
 async function generateReport(clients) {
@@ -154,7 +157,7 @@ async function generateReport(clients) {
     const HEADER = "<p>Seguem abaixo as pendências encontradas na última verificação:</p>\n"
     const fomattedErrors = 
         errorsFound.map(({ id, name, errors }) => 
-            `<strong>${id} | ${name}</strong>:` + 
+            `➤<strong>${id} | ${name}</strong>:` + 
             `<ul>${ errors.map(e => `<li>${e}</li>`).join("") }</ul>`)?.join("");
 
     (new Mailer(
@@ -216,21 +219,10 @@ function getErrors(client) {
         [...DETAILS.registrations]
             .filter(ie => !ie.enabled)
             .forEach(ie => companyReport.errors.push(`A inscrição estadual ` + 
-            `${ie.number} (${ie.state}) não está habilitada;`))
+            `${ie.number} (${ie.state}) não está habilitada - Situação do CNPJ: ${ie.status.text};`))
     }
 
     return companyReport;
-}
-
-function getParsedDaysEnv() {
-    try {
-        const allowedDays = JSON.parse(process.env.ALLOWED_REPORT_DAYS);
-
-        return allowedDays;
-
-    } catch (error) {
-       return null; 
-    }
 }
 
 function getNextBatchDate() {
