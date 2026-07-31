@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { sleep, logToFile, getToday, replaceLast, getParsedDaysEnv } from '../../utilities/util.js';
+import { sleep, logToFile, getToday, replaceLast, getParsedDaysEnv, COLORS } from '../../utilities/util.js';
 import { Mailer } from '../../classes/mailer.js';
+import { load } from 'cheerio';
 
 const MAX_RETRIES = 3;
 const DELAY_MS = 30000; 
@@ -25,7 +26,7 @@ async function update() {
     await processClients(clients, nextBatchDate);
 
     if(isReportDay()) {
-        generateReport(clients);
+        await generateReport(clients);
     }
 
     logToFile("Rotina concluída.");
@@ -66,7 +67,7 @@ function callApi(id) {
 
         return axioClient.get(
             `https://api.cnpja.com/office/${id?.replaceAll(" ", "")}` + 
-            "?simples=true&registrations=ORIGIN&maxAge=3", { headers: auth }).catch(err => err);
+            "?simples=true&registrations=ORIGIN&maxAge=10", { headers: auth }).catch(err => err);
     } else {
         return axioClient.get(`https://open.cnpja.com/office/${id?.replaceAll(" ", "")}`).catch(err => err);
     }
@@ -98,8 +99,8 @@ async function processClients(clients, nextBatchDate) {
     
     for(const client of clients) {
         const savedBatchDate = new Date(client?.DETAILS?.batchDate || null);
-        // const isExpired = savedBatchDate.getTime() != nextBatchDate.getTime();
-        const isExpired = true;
+        const isExpired = savedBatchDate.getTime() != nextBatchDate.getTime();
+        // const isExpired = true;
         
         if(!isExpired) {
             continue;
@@ -142,88 +143,132 @@ async function getAllActiveClients() {
 async function generateReport(clients) {
     const errorsFound = [];
 
-    clients.forEach(client => {
-        const companyReport = getErrors(client);
+    for(const client of clients) {
+        const companyReport = await getErrors(client);
     
         if(companyReport?.errors?.length) {
             errorsFound.push(companyReport);
         }
-    });
+    }
 
     if(!errorsFound.length) {
-        return;
+        return logToFile("Verificação concluída, nenhuma pendência encontrada.");
     }
 
     const HEADER = "<p>Seguem abaixo as pendências encontradas na última verificação:</p>\n"
     const fomattedErrors = 
         errorsFound.map(({ id, name, errors }) => 
-            `➤<strong>${id} | ${name}</strong>:` + 
-            `<ul>${ errors.map(e => `<li>${e}</li>`).join("") }</ul>`)?.join("");
+            replaceLast((`<strong>${id} | ${name}</strong>` + 
+            `${ errors.map(e => `<p style="text-indent:35pt">${e}</p>`).join("") }`), ";", ".")
+        )?.join("");
 
     (new Mailer(
         "Relatório de pendências",
-        `${HEADER}${replaceLast(fomattedErrors, ";", ".")}`)).sendEmail();
+        `${ HEADER }${ fomattedErrors }`)).sendEmail();
 
 }
 
-function getErrors(client) {
-    let {
-        CNPJ,
-        "RAZÃO SOCIAL" : NOME,
-        REGIME,
-        DETAILS,
-        "STATUS DOMÍNIO": STATUS_DOMINIO 
-    } = client;
-        
+async function getErrors(client) {
     const companyReport = {
-        "id": CNPJ,
-        "name": NOME,
+        "id": client.CNPJ,
+        "name": client["RAZÃO SOCIAL"],
         "errors": []
     }
 
-    if(!DETAILS) {
+    if(client.DETAILS) {
+        await doValidations(client, companyReport);
+        
+    } else {
         companyReport.errors.push("A busca dos dados da empresa não foi concluída " + 
-        "na API CNPJ JÁ, verifique os logs do sistema;");
-        return companyReport;
+            "na API CNPJ JÁ, verifique os logs do sistema;");
     }
-
-    if(["LUCRO PRESUMIDO", "LUCRO REAL", "IMUNE IRPJ"].includes(REGIME)) {
-        REGIME = "REGIME NORMAL";
-    }
-
-    let currentRegime = DETAILS?.company?.simples?.optant ? "SIMPLES NACIONAL" : "REGIME NORMAL";
-    const status = DETAILS?.status?.text.toUpperCase();
-
-    if(DETAILS?.company?.simei?.optant) {
-        currentRegime = "MEI";
-    }
-
-    if(REGIME != currentRegime) {
-        companyReport.errors.push(`Divergência de regime tributário entre a domínio [${REGIME}] `+ 
-        `e Receita Federal [${currentRegime}];`);
-    }
-
-    if(status != "ATIVA") {
-        const isParalyzed = 
-            STATUS_DOMINIO == "ATIVA-SEM MOV." &&
-            status == "SUSPENSA" &&
-            DETAILS?.reason?.text == "Interrupção temporária das atividades";
-            
-        if(!isParalyzed) {
-            companyReport.errors.push(`A empresa não está ativa na Receita Federal ` + 
-            `[status atual: ${status} - Motivo: ${DETAILS?.reason?.text}];`);
-        }
-    }
-
-    if(DETAILS?.registrations) {
-        [...DETAILS.registrations]
-            .filter(ie => !ie.enabled)
-            .forEach(ie => companyReport.errors.push(`A inscrição estadual ` + 
-            `${ie.number} (${ie.state}) não está habilitada - Situação do CNPJ: ${ie.status.text};`))
-    }
-
+    
     return companyReport;
 }
+
+async function doValidations(client, companyReport) {
+    normalizeFields(client);
+    validateStatus(client, companyReport);
+    validateRegime(client, companyReport);
+    await validateRegistrations(client, companyReport);
+}
+
+async function validateRegistrations(client, companyReport) {
+    if(client.DETAILS?.registrations) {
+        const registrations = [...client.DETAILS.registrations].filter(ie => !ie.enabled);
+
+        for(const { number, state } of registrations) {
+            const {
+                sintegraGoStatus,
+                invoiceEnabled 
+            } = state == "GO" ? await getSintegraGoStatus(number) : {};
+            let comment = "";
+            let dot = "";
+
+            if(["PARALISADA", "BAIXADA"]?.includes(sintegraGoStatus)) {
+                continue;
+
+            } else if(!sintegraGoStatus) {
+                dot = getFormattedDot(COLORS.RED)
+                comment = "[Regularize a situação na SEFAZ do respectivo estado]";
+
+            } else if(sintegraGoStatus && sintegraGoStatus != "ATIVA") {
+                dot = getFormattedDot(COLORS.RED)
+                comment = `[O status atual é: ${ sintegraGoStatus }. Verifique com urgência]`;
+
+            } else if(sintegraGoStatus && !invoiceEnabled) {
+                dot = getFormattedDot(COLORS.YELLOW);
+                comment = "[Realize o credenciamento na SEFAZ]";
+            }
+
+            companyReport.errors.push(`${ dot }A inscrição estadual ${number} (${state})` + 
+                ` não está habilitada. ${ comment ? `<strong>${comment}</strong>` : "" };`);
+        }
+    }
+}
+
+function getFormattedDot(color) {
+    return `<span style="color: ${ color }; font-size:20px; text-indent: 15pt;">●  </span>`;
+}
+
+function validateStatus(client, companyReport) {
+    if(client.DETAILS?.status?.text != "ATIVA") {
+        const isParalyzed = 
+            client["STATUS DOMÍNIO"] == "ATIVA-SEM MOV." &&
+            client.DETAILS?.status?.text  == "SUSPENSA" &&
+            client.DETAILS?.reason?.text == "Interrupção temporária das atividades";
+            
+        if(!isParalyzed) {
+            const dot = getFormattedDot(COLORS.RED);
+            companyReport.errors.push(`${ dot }A empresa não está ativa na Receita Federal ` + 
+            `<strong>[status atual: ${client.DETAILS?.status?.text } - Motivo: ${client.DETAILS?.reason?.text}]</strong>;`);
+        }
+    }
+}
+
+function validateRegime(client, companyReport) {
+    if(client.REGIME != client.DETAILS.regime) {
+        const dot = getFormattedDot(COLORS.RED);
+        companyReport.errors.push(`${ dot }Divergência de regime tributário entre a domínio (${client.REGIME}) `+ 
+        `e Receita Federal (${client.DETAILS.regime }). <strong>[Verifique a situação com urgência]</strong>;`);
+    }
+}
+
+function normalizeFields(client) {
+    if(["LUCRO PRESUMIDO", "LUCRO REAL", "IMUNE IRPJ"].includes(client.REGIME)) {
+        client.REGIME = "REGIME NORMAL";
+    }
+
+    client.DETAILS["regime"] = 
+        client?.DETAILS?.company?.simples?.optant ? "SIMPLES NACIONAL" : "REGIME NORMAL";
+
+    client.DETAILS.status.text = client.DETAILS?.status?.text.toUpperCase();
+
+    if(client?.DETAILS?.company?.simei?.optant) {
+        client.DETAILS.regime = "MEI";
+    }
+}
+
 
 function getNextBatchDate() {
     const today = getToday();
@@ -259,6 +304,47 @@ function getNextBatchDate() {
     }
 
     return null;
+}
+
+async function getSintegraGoStatus(id) {
+    const params = new URLSearchParams();
+    params.append("tDoc", id);
+
+    const url = "https://appasp.sefaz.go.gov.br/Sintegra/Consulta/consultar.asp";
+
+    const config = {
+        headers:  { Referer: "https://appasp.sefaz.go.gov.br/Sintegra/Consulta/default.html" }
+    };
+
+    const res = await axioClient.post(url, params, config);
+
+    if(!(res.status == 200 && res.data)) {
+        return null;
+    }
+
+    const $ = load(res.data);
+    const status = 
+        $(".label_title")
+            .filter((index, el) => $(el).text().includes("Cadastral Vigente"))
+            .next(".label_text")
+            .text()
+            .trim()
+            .split("-");
+
+    const invoiceOperations = 
+        $(".label_title")
+            .filter((index, el) => $(el).text().includes("Operações com NF-E"))
+            .next(".label_text")
+            .text()
+            .trim() == "Habilitado";
+
+    return {
+        sintegraGoStatus: 
+            status[0] ? 
+            status[0].toUpperCase().replace(" ", "").slice(0, -1) + "A" :
+            null,
+        invoiceEnabled: invoiceOperations
+    }
 }
 
 export { update }

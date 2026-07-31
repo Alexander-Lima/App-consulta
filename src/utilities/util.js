@@ -1,6 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 
+const COLORS = {
+    RED: "#DC2626",
+    YELLOW: "#FFD700"
+}
+
 function sanitizeCNPJ(cnpj) {
     const regex = /^[0-9]{11,14}$/;
     
@@ -69,7 +74,10 @@ function getParsedDaysEnv() {
 function replaceLast(string, search, replacement) {
   const index = string.lastIndexOf(search);
 
-  if (index === -1) return string;
+  if (index === -1) {
+     return string;
+  }
+  
   return `${string.slice(0, index)}${replacement}${string.slice(index + search.length)}`;
 }
 
@@ -83,6 +91,7 @@ export {
     logToFile,
     getToday,
     replaceLast,
-    getParsedDaysEnv
+    getParsedDaysEnv,
+    COLORS
 }
 
