@@ -23,7 +23,11 @@ async function update() {
         return logToFile("Nenhum cliente retornado pela api.");
     }
     
-    await processClients(clients, nextBatchDate);
+    const { end } = await processClients(clients, nextBatchDate) || {};
+
+    if(end) {
+        return logToFile("Rotina abortada.");  
+    }
 
     if(isReportDay()) {
         await generateReport(clients);
@@ -46,11 +50,29 @@ async function saveData(id, data, nextBatchDate) {
 }
 
 async function getApiData(id, retries = 0) {
-    const res = await callApi(id);
+    let res = await callApi(id);
 
     if(retries >= MAX_RETRIES) {
         return { error: `Máximo de tentativas excedido para CNPJ${id}` };
     }
+
+    // res = {
+    //     isAxiosError: true,
+    //     message: "Request failed with status code 404",
+    //     name: "AxiosError",
+    //     code: "ERR_BAD_REQUEST",
+    //     config: {
+    //         url: "/api/users",
+    //         method: "get",
+    //         headers: {}
+    //     },
+    //     status: 404,
+    //     response: {
+    //         data: {
+    //             message: "not enough credits"
+    //         }
+    //     }
+    // }
 
     if(!axios.isAxiosError(res)) {
         return { data: res.data };
@@ -110,6 +132,10 @@ async function processClients(clients, nextBatchDate) {
         
         logToFile(error || `Busca concluída para o CNPJ${client.CNPJ}` + 
             ` na API ${ isOfficialApi ? "oficial" : "gratuita"}.` );
+
+        if(error?.includes("créditos insuficientes")) {
+            return { end: true };
+        }
 
         if(data) {
             const success = await saveData(client.ID, data, nextBatchDate);
@@ -214,7 +240,7 @@ async function validateRegistrations(client, companyReport) {
 
             } else if(sintegraGoStatus && sintegraGoStatus != "ATIVA") {
                 dot = getFormattedDot(COLORS.RED)
-                comment = `[O status atual é: ${ sintegraGoStatus }. Verifique com urgência]`;
+                comment = `[O status atual é: ${ sintegraGoStatus }, verifique com urgência]`;
 
             } else if(sintegraGoStatus && !invoiceEnabled) {
                 dot = getFormattedDot(COLORS.YELLOW);
