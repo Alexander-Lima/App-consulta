@@ -9,8 +9,10 @@ async function getAllTPI(req, res) {
             const [result] = await getByIdService(id);
             return res.send(result);
         } 
-       
-        res.render(import.meta.dirname + "/views/consulta-tpi", { cnpjs: await getAllService(), today: new Date() });
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        res.render(import.meta.dirname + "/views/consulta-tpi", { cnpjs: await getAllService(), today: today });
         
     } catch (e) {
         return standardJsonError(res, e);
