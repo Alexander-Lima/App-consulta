@@ -40,7 +40,12 @@ function getAxiosRetryDefaultConfig() {
 } 
 
 function standardJsonError(res, errorObject) {
-    return res.status(400).end(JSON.stringify({error: errorObject?.message ? errorObject.message : "unknown"}));
+    if(errorObject.code == "ECONNREFUSED") {
+        return res.status(400).json({ message: "Falha de conexão. O sistema tentará reiniciar " + 
+        "o banco de dados, tente novamente após alguns minutos." });
+    }
+
+    return res.status(400).json({ error: errorObject?.message ? errorObject.message : "erro desconhecido" });
 }
 
 function sleep(delayMS) {

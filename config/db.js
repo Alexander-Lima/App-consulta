@@ -1,4 +1,5 @@
 import { Pool } from "pg";
+import { exec } from "node:child_process";
 
 const pool = new Pool({
     user: process.env.POSTGRES_USER,
@@ -19,6 +20,10 @@ async function executeQueryFunction(queryFunction) {
         return await queryFunction(client);
 
     } catch (error) {
+        if(error.code === "ECONNREFUSED") {
+            restartDBService();
+        }
+
         throw error;
 
     } finally {
@@ -38,11 +43,23 @@ async function withTransaction(queryFunction) {
         return results;
         
     } catch (error) {
+        if(error.code === "ECONNREFUSED") {
+            restartDBService();
+        }
+
         throw error;
 
     } finally {
         client?.release();
     }
+}
+
+function restartDBService() {
+    exec(`sc.exe start "postgresql16"`, (error, stdout, stderr) => {
+        if (error) {
+            console.error("Erro ao iniciar serviço:", stderr || error.message);
+        }
+    });
 }
 
 export { executeQueryFunction,  withTransaction };

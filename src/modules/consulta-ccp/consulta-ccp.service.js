@@ -82,7 +82,7 @@ async function getDataForCnpj(item) {
             return res(item);
         }
         
-        const urlCCP = "https://sig.catalao.go.gov.br/sig/rest/servicoContribuinteController/pesquisarDebitos";
+        const urlCCP = "https://catalao.prodataweb.inf.br/sig/rest/servicoContribuinteController/pesquisarDebitos";
         
         const respCCP = 
             await axiosInstance
@@ -94,8 +94,7 @@ async function getDataForCnpj(item) {
             item.failure = false;
         }
         
-        const urlContributor = 
-            "https://sig.catalao.go.gov.br/sig/rest/servicoContribuinteController/pesquisarContribuintes";
+        const urlContributor = "https://catalao.prodataweb.inf.br/sig/rest/servicoContribuinteController/pesquisarContribuintes";
     
         const respContributor = 
             await axiosInstance

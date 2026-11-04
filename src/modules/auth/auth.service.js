@@ -1,21 +1,15 @@
 import { compare } from 'bcrypt';
+import { promisify } from "node:util";
 import getUserPasswordHash from './auth.respository.js'
 
+const compareAsync = promisify(compare);
+
 export default async function (user, pass) {
-    return new Promise(async (res) => {
-        const resp  = await getUserPasswordHash(user);
+    const resp = await getUserPasswordHash(user);
 
-        if(!resp) {
-            return res(false);
-        }
+    if (!resp) {
+        return false;
+    }
 
-        const { hash } = resp;
-        compare(pass, hash, (err, result) => {
-            if(err) {
-                rej(false);
-            }
-            
-            res(result);
-        })
-    })
+    return compareAsync(pass, resp.hash || "");
 }
